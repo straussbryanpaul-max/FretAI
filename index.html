@@ -107,8 +107,12 @@ textarea.ci::placeholder{color:var(--muted);}
 .sempty .big{font-size:36px;opacity:.3;}
 
 /* SECTION BLOCKS */
-.sblock{border:1px solid var(--border);border-radius:3px;margin-bottom:10px;overflow:hidden;animation:fu .3s ease;}
-.sblock-head{background:var(--s2);padding:5px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sblock{border:1px solid var(--border);border-radius:3px;margin-bottom:10px;overflow:hidden;animation:fu .3s ease;transition:opacity .15s,transform .15s;}
+.sblock.dragging{opacity:.4;transform:scale(.98);}
+.sblock.drag-over{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold);}
+.sblock-head{background:var(--s2);padding:5px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:grab;}
+.sblock-head:active{cursor:grabbing;}
+.drag-handle{font-size:12px;color:var(--border2);margin-right:6px;user-select:none;touch-action:none;}
 .sblock-label{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--rust);}
 .sblock-type{font-family:var(--fm);font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
 /* chord type */
@@ -541,28 +545,33 @@ function renderSheet(){
   const el=document.getElementById('sscroll');
   if(!sections.length){el.innerHTML=`<div class="sempty"><div class="big">🎼</div><div>Your song builds here.<br>Approve sections from the chat.</div></div>`;return;}
   el.innerHTML=sections.map((s,i)=>{
-    const isFirst=i===0,isLast=i===sections.length-1;
     const editBar=`<div class="sblock-edit-bar">
       <button class="ebtn" onclick="editLabel(${i})">✎ Label</button>
       ${s.stype==='chords'?`<button class="ebtn" onclick="editChords(${i})">✎ Chords</button>`:`<button class="ebtn" onclick="editTab(${i})">✎ Tab</button>`}
       <button class="ebtn" onclick="editLyrics(${i})">✎ ${s.lyrics?'Edit':'Add'} Lyrics</button>
       <button class="ebtn" onclick="editNotes(${i})">✎ ${s.notes?'Edit':'Add'} Notes</button>
-      ${!isFirst?`<button class="ebtn up" onclick="moveSection(${i},-1)">↑</button>`:''}
-      ${!isLast?`<button class="ebtn dn" onclick="moveSection(${i},1)">↓</button>`:''}
       <button class="ebtn del" onclick="removeSection(${i})">✕ Remove</button>
     </div>`;
 
+    const head=`<div class="sblock-head" draggable="false">
+      <div style="display:flex;align-items:center;gap:4px">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+        <span class="sblock-label">${s.label}</span>
+      </div>
+      <span class="sblock-type">${s.stype==='tab'?'Tab':'Chords'}</span>
+    </div>`;
+
     if(s.stype==='tab'){
-      return `<div class="sblock" id="sb_${i}">
-        <div class="sblock-head"><span class="sblock-label">${s.label}</span><span class="sblock-type">Tab</span></div>
+      return `<div class="sblock" id="sb_${i}" draggable="true" data-idx="${i}">
+        ${head}
         <div class="sblock-tab" id="sbt_${i}">${s.tab}</div>
         ${s.notes?`<div class="sblock-notes" id="sbn_${i}">📝 ${s.notes}</div>`:''}
         ${s.lyrics?`<div class="sblock-lyrics" id="sbl_${i}">${s.lyrics}</div>`:''}
         ${editBar}
       </div>`;
     } else {
-      return `<div class="sblock" id="sb_${i}">
-        <div class="sblock-head"><span class="sblock-label">${s.label}</span><span class="sblock-type">Chords</span></div>
+      return `<div class="sblock" id="sb_${i}" draggable="true" data-idx="${i}">
+        ${head}
         <div class="sblock-chords" id="sbc_${i}">${s.chords}</div>
         ${s.pattern?`<div class="sblock-pattern">${s.pattern}</div>`:''}
         ${s.notes?`<div class="sblock-notes" id="sbn_${i}">📝 ${s.notes}</div>`:''}
@@ -571,6 +580,78 @@ function renderSheet(){
       </div>`;
     }
   }).join('');
+  initDragDrop();
+}
+
+// ── Drag and Drop ─────────────────────────────────────────────────
+let dragSrcIdx=null;
+
+function initDragDrop(){
+  const blocks=document.querySelectorAll('.sblock[draggable="true"]');
+  blocks.forEach(block=>{
+    // Desktop drag events
+    block.addEventListener('dragstart',e=>{
+      dragSrcIdx=parseInt(block.dataset.idx);
+      block.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    block.addEventListener('dragend',e=>{
+      block.classList.remove('dragging');
+      document.querySelectorAll('.sblock').forEach(b=>b.classList.remove('drag-over'));
+    });
+    block.addEventListener('dragover',e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      document.querySelectorAll('.sblock').forEach(b=>b.classList.remove('drag-over'));
+      block.classList.add('drag-over');
+    });
+    block.addEventListener('drop',e=>{
+      e.preventDefault();
+      const targetIdx=parseInt(block.dataset.idx);
+      if(dragSrcIdx===null||dragSrcIdx===targetIdx)return;
+      const moved=sections.splice(dragSrcIdx,1)[0];
+      sections.splice(targetIdx,0,moved);
+      dragSrcIdx=null;
+      persist();renderSheet();
+    });
+
+    // Touch drag (mobile)
+    const head=block.querySelector('.sblock-head');
+    let touchStartY=0,touchStartIdx=null,clone=null;
+
+    head.addEventListener('touchstart',e=>{
+      touchStartY=e.touches[0].clientY;
+      touchStartIdx=parseInt(block.dataset.idx);
+      block.classList.add('dragging');
+    },{passive:true});
+
+    head.addEventListener('touchmove',e=>{
+      e.preventDefault();
+      const y=e.touches[0].clientY;
+      const els=document.querySelectorAll('.sblock');
+      els.forEach(b=>b.classList.remove('drag-over'));
+      // find block under touch point
+      els.forEach(b=>{
+        const r=b.getBoundingClientRect();
+        if(y>=r.top&&y<=r.bottom&&b!==block) b.classList.add('drag-over');
+      });
+    },{passive:false});
+
+    head.addEventListener('touchend',e=>{
+      block.classList.remove('dragging');
+      const target=document.querySelector('.sblock.drag-over');
+      if(target){
+        const targetIdx=parseInt(target.dataset.idx);
+        target.classList.remove('drag-over');
+        if(touchStartIdx!==null&&touchStartIdx!==targetIdx){
+          const moved=sections.splice(touchStartIdx,1)[0];
+          sections.splice(targetIdx,0,moved);
+          persist();renderSheet();
+        }
+      }
+      touchStartIdx=null;
+    },{passive:true});
+  });
 }
 
 // ── Section editing functions ─────────────────────────────────────
@@ -579,14 +660,6 @@ function removeSection(i){
   sections.splice(i,1);persist();renderSheet();
 }
 
-function moveSection(i,dir){
-  const j=i+dir;
-  if(j<0||j>=sections.length)return;
-  [sections[i],sections[j]]=[sections[j],sections[i]];
-  persist();renderSheet();
-  // scroll moved block into view
-  setTimeout(()=>{const el=document.getElementById('sb_'+j);if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});},50);
-}
 
 function editLabel(i){
   const sec=sections[i],block=document.getElementById('sb_'+i);
