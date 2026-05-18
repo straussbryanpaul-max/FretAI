@@ -2,1403 +2,864 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Fretboard AI</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;700&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
-:root {
-  --bg:#080a0e;
-  --s1:#0f1117;
-  --s2:#161b24;
-  --s3:#1e2430;
-  --border:#252d3d;
-  --border2:#2e3848;
-  --gold:#d4a843;
-  --gold2:#f0c060;
-  --rust:#b8472a;
-  --blue:#3d6e8f;
-  --green:#3a7d5a;
-  --text:#ddd8cc;
-  --muted:#556070;
-  --muted2:#3a4455;
-  --font-display:'Bebas Neue',sans-serif;
-  --font-body:'Crimson Pro',serif;
-  --font-mono:'JetBrains Mono',monospace;
+:root{
+  --bg:#080a0e;--s1:#0f1117;--s2:#161b24;
+  --border:#252d3d;--border2:#2e3848;
+  --gold:#d4a843;--gold2:#f0c060;--rust:#b8472a;--green:#3a7d5a;
+  --text:#ddd8cc;--muted:#556070;
+  --fd:'Bebas Neue',sans-serif;--fb:'Crimson Pro',serif;--fm:'JetBrains Mono',monospace;
 }
+html,body{height:100%;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px;display:flex;flex-direction:column;}
 
-html,body{height:100%;overflow:hidden}
-
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:var(--font-body);
-  font-size:15px;
-  display:flex;
-  flex-direction:column;
-}
-
-/* ── HEADER ── */
-.header{
-  display:flex;align-items:center;gap:16px;
-  padding:10px 20px;
-  background:var(--s1);
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-  position:relative;
-}
-
-.logo{
-  font-family:var(--font-display);
-  font-size:28px;
-  color:var(--gold);
-  letter-spacing:2px;
-  line-height:1;
-}
-
+/* HEADER */
+.header{height:54px;display:flex;align-items:center;padding:0 14px;gap:10px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;}
+.logo{font-family:var(--fd);font-size:24px;color:var(--gold);letter-spacing:2px;line-height:1;white-space:nowrap;}
 .logo span{color:var(--rust);}
+.hactions{display:flex;align-items:center;gap:6px;margin-left:auto;}
+.hbtn{font-family:var(--fm);font-size:9px;padding:6px 10px;border-radius:2px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);display:flex;align-items:center;gap:4px;white-space:nowrap;transition:all .15s;}
+.hbtn:active,.hbtn:hover{border-color:var(--gold);color:var(--gold);}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--rust);flex-shrink:0;}
+.dot.ok{background:var(--green);}
 
-.tagline{
-  font-family:var(--font-mono);
-  font-size:9px;
-  letter-spacing:3px;
-  text-transform:uppercase;
-  color:var(--muted);
-  margin-top:2px;
-}
+/* BOTTOM NAV */
+.bnav{height:54px;display:flex;background:var(--s1);border-top:1px solid var(--border);flex-shrink:0;}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:var(--fm);font-size:8px;letter-spacing:1px;text-transform:uppercase;border-top:2px solid transparent;transition:color .15s;}
+.nbtn .ni{font-size:18px;line-height:1;}
+.nbtn.active{color:var(--gold);border-top-color:var(--gold);}
 
-.header-tabs{
-  display:flex;gap:4px;margin-left:auto;
-}
-
-.tab-btn{
-  font-family:var(--font-mono);
-  font-size:10px;letter-spacing:1px;text-transform:uppercase;
-  padding:6px 14px;border-radius:2px;cursor:pointer;
-  border:1px solid var(--border);
-  background:transparent;color:var(--muted);
-  transition:all 0.15s;
-}
-.tab-btn.active{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:700;}
-.tab-btn:hover:not(.active){border-color:var(--gold);color:var(--gold);}
-
-.api-key-btn{
-  font-family:var(--font-mono);font-size:10px;
-  padding:6px 12px;border-radius:2px;cursor:pointer;
-  border:1px solid var(--border2);background:transparent;
-  color:var(--muted);transition:all 0.15s;
-  display:flex;align-items:center;gap:5px;
-  margin-left:8px;
-}
-.api-key-btn:hover{border-color:var(--gold);color:var(--gold);}
-.api-key-btn .dot{width:6px;height:6px;border-radius:50%;background:var(--rust);}
-.api-key-btn .dot.ok{background:var(--green);}
-
-/* ── VIEWS ── */
-.view{display:none;flex:1;overflow:hidden;}
+/* LAYOUT */
+.abody{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.view{display:none;flex:1;flex-direction:column;overflow:hidden;}
 .view.active{display:flex;}
 
-/* ── WRITE VIEW ── */
-#writeView{flex-direction:row;}
+/* WRITE TABS (mobile) */
+.wtabs{display:flex;background:var(--s2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.wtab{flex:1;padding:9px;font-family:var(--fm);font-size:9px;letter-spacing:1px;text-transform:uppercase;text-align:center;cursor:pointer;color:var(--muted);border:none;background:transparent;border-bottom:2px solid transparent;transition:all .15s;}
+.wtab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.wpanes{flex:1;overflow:hidden;display:flex;flex-direction:column;}
 
-/* Chat panel */
-.chat-panel{
-  display:flex;flex-direction:column;
-  flex:1;border-right:1px solid var(--border);
-  overflow:hidden;min-width:0;
-}
-
-.chat-messages{
-  flex:1;overflow-y:auto;padding:18px;
-  display:flex;flex-direction:column;gap:12px;
-  scroll-behavior:smooth;
-}
-.chat-messages::-webkit-scrollbar{width:3px;}
-.chat-messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-.msg{display:flex;gap:10px;align-items:flex-start;animation:slideUp 0.25s ease;}
+/* CHAT PANE */
+.cpane{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.cpane.hidden,.spane.hidden{display:none;}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;}
+.msgs::-webkit-scrollbar{width:3px;}
+.msgs::-webkit-scrollbar-thumb{background:var(--border2);}
+.msg{display:flex;gap:8px;align-items:flex-start;animation:fu .2s ease;}
 .msg.user{flex-direction:row-reverse;}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.av{width:26px;height:26px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--s2);border:1px solid var(--border);}
+.msg.user .av{background:var(--rust);border-color:var(--rust);}
+.bub{max-width:86%;padding:9px 12px;border-radius:3px;font-size:14px;line-height:1.6;background:var(--s2);border:1px solid var(--border);}
+.msg.user .bub{background:#1a100a;border-color:#2e1a10;}
+.stag{display:inline-block;font-family:var(--fm);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--rust);border:1px solid var(--rust);padding:1px 5px;border-radius:1px;margin-bottom:5px;}
+.cpills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.pill{font-family:var(--fm);font-size:11px;font-weight:700;padding:4px 10px;border-radius:2px;cursor:pointer;border:1px solid var(--gold);color:var(--gold);background:transparent;transition:all .12s;}
+.pill:active,.pill:hover{background:var(--gold);color:var(--bg);}
 
-@keyframes slideUp{
-  from{opacity:0;transform:translateY(6px)}
-  to{opacity:1;transform:translateY(0)}
-}
-
-.avatar{
-  width:28px;height:28px;border-radius:3px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:13px;
-  background:var(--s2);border:1px solid var(--border);
-}
-.msg.user .avatar{background:var(--rust);border-color:var(--rust);}
-
-.bubble{
-  max-width:82%;padding:10px 14px;border-radius:3px;
-  font-size:14px;line-height:1.65;
-  background:var(--s2);border:1px solid var(--border);
-}
-.msg.user .bubble{background:#1a100a;border-color:#2e1a10;}
-
-.sec-tag{
-  display:inline-block;font-family:var(--font-mono);
-  font-size:8px;letter-spacing:2px;text-transform:uppercase;
-  color:var(--rust);border:1px solid var(--rust);
-  padding:1px 6px;border-radius:1px;margin-bottom:6px;
-}
-
-.chord-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
-.pill{
-  font-family:var(--font-mono);font-size:11px;font-weight:700;
-  padding:3px 9px;border-radius:2px;cursor:pointer;
-  border:1px solid var(--gold);color:var(--gold);
-  background:transparent;transition:all 0.12s;
-}
-.pill:hover{background:var(--gold);color:var(--bg);}
-
-/* Quick prompts */
-.quick-area{
-  padding:8px 14px;
-  border-top:1px solid var(--border);
+/* COMMIT CARD */
+.commit-card{
+  margin-top:10px;border:1px solid var(--border2);border-radius:3px;overflow:hidden;
   background:var(--s1);
-  display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;
 }
-.qp{
-  font-family:var(--font-mono);font-size:9px;letter-spacing:1px;
-  padding:4px 10px;border-radius:2px;cursor:pointer;
-  border:1px solid var(--border2);color:var(--muted);
-  background:transparent;transition:all 0.12s;white-space:nowrap;
-}
-.qp:hover{border-color:var(--gold);color:var(--gold);}
+.commit-preview{padding:10px 12px;}
+.commit-preview-label{font-family:var(--fm);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--rust);margin-bottom:5px;}
+.commit-preview-chords{font-family:var(--fm);font-size:12px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:4px;}
+.commit-preview-tab{font-family:var(--fm);font-size:10px;color:#a8c4a8;background:#0d1a0d;border:1px solid #1e3a1e;border-radius:2px;padding:8px 10px;overflow-x:auto;white-space:pre;margin-bottom:4px;-webkit-overflow-scrolling:touch;}
+.commit-preview-lyrics{font-size:12px;color:var(--text);font-style:italic;line-height:1.6;margin-top:4px;white-space:pre-wrap;}
+.commit-actions{display:flex;border-top:1px solid var(--border);}
+.commit-btn{flex:1;padding:10px;font-family:var(--fm);font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;background:transparent;transition:all .15s;}
+.commit-btn.add{color:var(--green);border-right:1px solid var(--border);}
+.commit-btn.add:active,.commit-btn.add:hover{background:var(--green);color:#fff;}
+.commit-btn.retry{color:var(--muted);}
+.commit-btn.retry:active,.commit-btn.retry:hover{background:var(--border2);color:var(--text);}
+.commit-btn.discard{color:var(--rust);}
+.commit-btn.discard:active,.commit-btn.discard:hover{background:var(--rust);color:#fff;}
 
-/* Input area */
-.input-area{
-  padding:12px 14px;border-top:1px solid var(--border);
-  background:var(--s1);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;
-}
-textarea.chat-input{
-  flex:1;background:var(--s2);border:1px solid var(--border);
-  border-radius:3px;color:var(--text);
-  font-family:var(--font-body);font-size:14px;
-  padding:9px 12px;resize:none;outline:none;
-  min-height:40px;max-height:110px;line-height:1.5;
-  transition:border-color 0.15s;
-}
-textarea.chat-input:focus{border-color:var(--gold);}
-textarea.chat-input::placeholder{color:var(--muted);}
+/* QUICK + INPUT */
+.qarea{padding:8px 12px;border-top:1px solid var(--border);background:var(--s1);display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;}
+.qp{font-family:var(--fm);font-size:9px;padding:5px 10px;border-radius:2px;cursor:pointer;border:1px solid var(--border2);color:var(--muted);background:transparent;white-space:nowrap;}
+.qp:active,.qp:hover{border-color:var(--gold);color:var(--gold);}
+.iarea{padding:10px 12px;border-top:1px solid var(--border);background:var(--s1);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+textarea.ci{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--fb);font-size:15px;padding:9px 12px;resize:none;outline:none;min-height:42px;max-height:100px;line-height:1.5;transition:border-color .15s;-webkit-appearance:none;}
+textarea.ci:focus{border-color:var(--gold);}
+textarea.ci::placeholder{color:var(--muted);}
+.sbtn{background:var(--gold);color:var(--bg);border:none;border-radius:3px;width:42px;height:42px;flex-shrink:0;cursor:pointer;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.sbtn:disabled{opacity:.35;}
 
-.send{
-  background:var(--gold);color:var(--bg);border:none;
-  border-radius:3px;width:40px;height:40px;flex-shrink:0;
-  cursor:pointer;font-size:16px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;
-  transition:all 0.12s;
-}
-.send:hover:not(:disabled){background:var(--gold2);}
-.send:disabled{opacity:0.35;cursor:not-allowed;}
+/* SONG SHEET PANE */
+.spane{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.shead{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--s1);}
+.stitle{font-family:var(--fd);font-size:16px;color:var(--gold);letter-spacing:1px;cursor:pointer;border-bottom:1px dashed var(--border2);padding-bottom:1px;}
+.sacts{display:flex;gap:5px;}
+.ibtn{background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:var(--fm);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:5px 9px;border-radius:2px;cursor:pointer;transition:all .12s;}
+.ibtn:active,.ibtn:hover{border-color:var(--gold);color:var(--gold);}
+.ibtn.save{border-color:var(--green);color:var(--green);}
+.ibtn.save:active,.ibtn.save:hover{background:var(--green);color:#fff;}
+.sscroll{flex:1;overflow-y:auto;padding:12px;-webkit-overflow-scrolling:touch;}
+.sempty{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--muted);font-size:13px;text-align:center;line-height:1.8;padding:40px 20px;}
+.sempty .big{font-size:36px;opacity:.3;}
 
-/* Song sheet panel */
-.song-panel{
-  width:320px;flex-shrink:0;
-  display:flex;flex-direction:column;
-  background:var(--s1);overflow:hidden;
-}
+/* SECTION BLOCKS */
+.sblock{border:1px solid var(--border);border-radius:3px;margin-bottom:10px;overflow:hidden;animation:fu .3s ease;}
+.sblock-head{background:var(--s2);padding:5px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sblock-label{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--rust);}
+.sblock-type{font-family:var(--fm);font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+/* chord type */
+.sblock-chords{padding:7px 10px;font-family:var(--fm);font-size:13px;color:var(--gold);font-weight:700;letter-spacing:1px;border-bottom:1px solid var(--border);}
+.sblock-pattern{padding:5px 10px;font-family:var(--fm);font-size:10px;color:var(--muted);font-style:italic;border-bottom:1px solid var(--border);}
+/* tab type */
+.sblock-tab{padding:10px;font-family:var(--fm);font-size:11px;color:#a8c4a8;line-height:1.6;background:#0d1a0d;overflow-x:auto;white-space:pre;border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;}
+/* lyrics */
+.sblock-lyrics{padding:8px 10px;font-size:13px;color:var(--text);line-height:1.75;white-space:pre-wrap;font-style:italic;}
+.nolyr{color:var(--muted);font-style:normal;font-size:11px;font-family:var(--fm);}
 
-.song-panel-head{
-  padding:12px 16px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
-}
-.song-panel-head h2{
-  font-family:var(--font-display);
-  font-size:16px;color:var(--gold);letter-spacing:1px;
-}
+/* DIAG BAR */
+.diagbar{padding:10px 14px;border-top:1px solid var(--border);background:var(--s2);flex-shrink:0;}
+.diagbar-title{font-family:var(--fm);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.diagrow{display:flex;gap:10px;flex-wrap:wrap;overflow-x:auto;}
+.ditem{text-align:center;flex-shrink:0;}
+.dname{font-family:var(--fm);font-size:10px;font-weight:700;color:var(--gold);margin-bottom:3px;}
 
-.song-actions{display:flex;gap:6px;}
-.icon-btn{
-  background:transparent;border:1px solid var(--border2);
-  color:var(--muted);font-family:var(--font-mono);font-size:9px;
-  letter-spacing:1px;text-transform:uppercase;
-  padding:4px 9px;border-radius:2px;cursor:pointer;transition:all 0.12s;
-}
-.icon-btn:hover{border-color:var(--gold);color:var(--gold);}
-.icon-btn.save{border-color:var(--green);color:var(--green);}
-.icon-btn.save:hover{background:var(--green);color:#fff;}
+/* COVER VIEW */
+.csbar{padding:12px;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0;}
+.csrow{display:flex;gap:8px;}
+.cinput{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--fb);font-size:15px;padding:10px 12px;outline:none;-webkit-appearance:none;}
+.cinput:focus{border-color:var(--gold);}
+.cinput::placeholder{color:var(--muted);}
+.lbtn{background:var(--gold);color:var(--bg);border:none;border-radius:3px;padding:0 16px;font-family:var(--fm);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.lbtn:disabled{opacity:.4;}
+.ctabs{display:flex;background:var(--s2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.ctab{flex:1;padding:8px;text-align:center;cursor:pointer;font-family:var(--fm);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border:none;background:transparent;border-bottom:2px solid transparent;transition:all .15s;}
+.ctab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.cbody{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.cresult{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch;display:none;}
+.cresult.active{display:block;}
+.clpane{flex:1;overflow-y:auto;padding:10px;-webkit-overflow-scrolling:touch;display:none;}
+.clpane.active{display:block;}
+.ccard{background:var(--s2);border:1px solid var(--border);border-radius:3px;padding:14px;animation:fu .25s ease;}
+.ccard-title{font-family:var(--fd);font-size:20px;color:var(--gold);letter-spacing:1px;margin-bottom:3px;}
+.ccard-artist{font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:12px;}
+.ccard-sec{margin-bottom:12px;}
+.ccard-sec h4{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--rust);margin-bottom:5px;}
+.cchords{font-family:var(--fm);font-size:13px;color:var(--gold);font-weight:700;line-height:2;}
+.cnotes{font-size:13px;color:var(--text);line-height:1.7;margin-top:8px;}
+.tab-block{margin-top:12px;border-top:1px solid var(--border);padding-top:10px;}
+.tab-block-title{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--rust);margin-bottom:8px;}
+.tab-lbl{font-family:var(--fm);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.tab-pre{font-family:var(--fm);font-size:11px;color:#a8c4a8;line-height:1.6;background:#0d1a0d;border:1px solid #1e3a1e;border-radius:2px;padding:10px 12px;overflow-x:auto;white-space:pre;margin-bottom:10px;-webkit-overflow-scrolling:touch;}
+.savecov{margin-top:12px;background:transparent;border:1px solid var(--green);color:var(--green);font-family:var(--fm);font-size:10px;letter-spacing:1px;padding:10px 16px;border-radius:2px;cursor:pointer;width:100%;transition:all .12s;}
+.savecov:active,.savecov:hover{background:var(--green);color:#fff;}
+.citem{padding:12px;border:1px solid var(--border);border-radius:3px;margin-bottom:8px;cursor:pointer;background:var(--s2);transition:border-color .12s;}
+.citem:active,.citem:hover{border-color:var(--gold);}
+.citem-title{font-family:var(--fm);font-size:12px;font-weight:700;color:var(--text);}
+.citem-artist{font-size:12px;color:var(--muted);margin-top:2px;}
+.citem-key{font-family:var(--fm);font-size:9px;color:var(--gold);margin-top:4px;}
+.clempty{color:var(--muted);font-size:12px;text-align:center;padding:30px 16px;line-height:1.8;font-family:var(--fm);}
 
-.song-scroll{flex:1;overflow-y:auto;padding:14px;}
-.song-scroll::-webkit-scrollbar{width:3px;}
-.song-scroll::-webkit-scrollbar-thumb{background:var(--border2);}
+/* LIBRARY */
+.lhead{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--s1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.lhead h2{font-family:var(--fd);font-size:20px;color:var(--gold);letter-spacing:2px;}
+.lscroll{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;}
+.lcard{background:var(--s2);border:1px solid var(--border);border-radius:3px;padding:14px;animation:fu .3s ease;}
+.lcard-title{font-family:var(--fd);font-size:18px;color:var(--gold);letter-spacing:1px;margin-bottom:3px;}
+.lcard-date{font-family:var(--fm);font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;}
+.lcard-secs{font-family:var(--fm);font-size:9px;color:var(--rust);letter-spacing:1px;text-transform:uppercase;}
+.lcard-acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.lbtn2{font-family:var(--fm);font-size:9px;letter-spacing:1px;padding:6px 12px;border-radius:2px;cursor:pointer;border:1px solid var(--border2);color:var(--muted);background:transparent;transition:all .12s;}
+.lbtn2:active,.lbtn2:hover{border-color:var(--gold);color:var(--gold);}
+.lbtn2.del:active,.lbtn2.del:hover{border-color:var(--rust);color:var(--rust);}
+.lempty{display:flex;flex-direction:column;align-items:center;color:var(--muted);text-align:center;gap:10px;padding:60px 20px;}
+.lempty .big{font-size:40px;opacity:.2;}
 
-.song-empty{
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;gap:8px;color:var(--muted);
-  font-size:13px;text-align:center;line-height:1.8;
-  height:100%;
-}
-.song-empty .big{font-size:32px;opacity:0.3;}
-
-.section-block{
-  border:1px solid var(--border);border-radius:3px;
-  margin-bottom:10px;overflow:hidden;animation:slideUp 0.3s ease;
-}
-.section-block-head{
-  background:var(--s2);padding:5px 10px;
-  display:flex;align-items:center;justify-content:space-between;
-  border-bottom:1px solid var(--border);
-}
-.section-block-label{
-  font-family:var(--font-mono);font-size:9px;
-  letter-spacing:2px;text-transform:uppercase;color:var(--rust);
-}
-.section-block-chords{
-  padding:7px 10px;
-  font-family:var(--font-mono);font-size:12px;
-  color:var(--gold);font-weight:700;letter-spacing:1px;
-  border-bottom:1px solid var(--border);
-}
-.section-block-lyrics{
-  padding:8px 10px;font-size:13px;
-  color:var(--text);line-height:1.75;white-space:pre-wrap;font-style:italic;
-}
-.no-lyrics{color:var(--muted);font-style:normal;font-size:11px;font-family:var(--font-mono);}
-
-/* Tablature */
-.tab-block{
-  margin-top:14px;border-top:1px solid var(--border);padding-top:12px;
-}
-.tab-block-title{
-  font-family:var(--font-mono);font-size:9px;letter-spacing:2px;
-  text-transform:uppercase;color:var(--rust);margin-bottom:8px;
-}
-.tab-block-label{
-  font-family:var(--font-mono);font-size:9px;color:var(--muted);
-  letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;
-}
-.tab-pre{
-  font-family:var(--font-mono);font-size:11px;
-  color:#a8c4a8;line-height:1.6;
-  background:#0d1a0d;border:1px solid #1e3a1e;
-  border-radius:2px;padding:10px 12px;
-  overflow-x:auto;white-space:pre;
-  margin-bottom:10px;
-}
-.tab-pre::-webkit-scrollbar{height:3px;}
-.tab-pre::-webkit-scrollbar-thumb{background:var(--border2);}
-
-/* Chord diagrams */
-.diag-bar{
-  padding:10px 16px;border-top:1px solid var(--border);
-  background:var(--s2);flex-shrink:0;
-}
-.diag-bar-title{
-  font-family:var(--font-mono);font-size:8px;
-  letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;
-}
-.diag-row{display:flex;gap:10px;flex-wrap:wrap;}
-.diag-item{text-align:center;}
-.diag-name{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--gold);margin-bottom:3px;}
-
-/* ── COVER VIEW ── */
-#coverView{flex-direction:row;}
-
-.cover-lookup{
-  flex:1;display:flex;flex-direction:column;
-  border-right:1px solid var(--border);overflow:hidden;
-}
-
-.cover-lookup-top{
-  padding:20px;border-bottom:1px solid var(--border);
-  background:var(--s1);flex-shrink:0;
-}
-.cover-lookup-top h3{
-  font-family:var(--font-display);font-size:22px;
-  color:var(--gold);letter-spacing:2px;margin-bottom:12px;
-}
-
-.cover-search-row{display:flex;gap:8px;}
-.cover-input{
-  flex:1;background:var(--s2);border:1px solid var(--border);
-  border-radius:3px;color:var(--text);
-  font-family:var(--font-body);font-size:15px;
-  padding:10px 14px;outline:none;transition:border-color 0.15s;
-}
-.cover-input:focus{border-color:var(--gold);}
-.cover-input::placeholder{color:var(--muted);}
-
-.lookup-btn{
-  background:var(--gold);color:var(--bg);border:none;
-  border-radius:3px;padding:0 20px;
-  font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;
-  cursor:pointer;transition:all 0.12s;white-space:nowrap;
-}
-.lookup-btn:hover:not(:disabled){background:var(--gold2);}
-.lookup-btn:disabled{opacity:0.4;cursor:not-allowed;}
-
-.cover-result{
-  flex:1;overflow-y:auto;padding:20px;
-}
-.cover-result::-webkit-scrollbar{width:3px;}
-.cover-result::-webkit-scrollbar-thumb{background:var(--border2);}
-
-.cover-result-card{
-  background:var(--s2);border:1px solid var(--border);
-  border-radius:3px;padding:16px;animation:slideUp 0.25s ease;
-}
-.cover-result-title{
-  font-family:var(--font-display);font-size:20px;
-  color:var(--gold);letter-spacing:1px;margin-bottom:4px;
-}
-.cover-result-artist{
-  font-family:var(--font-mono);font-size:10px;
-  color:var(--muted);letter-spacing:1px;margin-bottom:14px;
-}
-.cover-result-section{margin-bottom:14px;}
-.cover-result-section h4{
-  font-family:var(--font-mono);font-size:9px;
-  letter-spacing:2px;text-transform:uppercase;
-  color:var(--rust);margin-bottom:6px;
-}
-.cover-chords{
-  font-family:var(--font-mono);font-size:13px;
-  color:var(--gold);font-weight:700;line-height:2;
-}
-.cover-notes{
-  font-size:13px;color:var(--text);line-height:1.7;margin-top:8px;
-}
-.save-cover-btn{
-  margin-top:12px;
-  background:transparent;border:1px solid var(--green);color:var(--green);
-  font-family:var(--font-mono);font-size:10px;letter-spacing:1px;
-  padding:7px 16px;border-radius:2px;cursor:pointer;transition:all 0.12s;
-}
-.save-cover-btn:hover{background:var(--green);color:#fff;}
-
-/* Cover list */
-.cover-list-panel{
-  width:280px;flex-shrink:0;
-  background:var(--s1);display:flex;flex-direction:column;overflow:hidden;
-}
-.cover-list-head{
-  padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
-}
-.cover-list-head h3{
-  font-family:var(--font-display);font-size:16px;
-  color:var(--gold);letter-spacing:1px;
-}
-.cover-list-scroll{flex:1;overflow-y:auto;padding:10px;}
-.cover-list-scroll::-webkit-scrollbar{width:3px;}
-.cover-list-scroll::-webkit-scrollbar-thumb{background:var(--border2);}
-
-.cover-item{
-  padding:10px 12px;border:1px solid var(--border);border-radius:3px;
-  margin-bottom:8px;cursor:pointer;transition:all 0.12s;
-  animation:slideUp 0.25s ease;
-}
-.cover-item:hover{border-color:var(--gold);}
-.cover-item-title{
-  font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text);
-}
-.cover-item-artist{
-  font-size:11px;color:var(--muted);margin-top:2px;
-}
-.cover-item-key{
-  font-family:var(--font-mono);font-size:9px;color:var(--gold);margin-top:4px;
-}
-.cover-list-empty{
-  color:var(--muted);font-size:12px;text-align:center;
-  padding:30px 16px;line-height:1.8;font-family:var(--font-mono);
-}
-
-/* ── LIBRARY VIEW ── */
-#libraryView{flex-direction:column;}
-
-.library-head{
-  padding:16px 24px;border-bottom:1px solid var(--border);
-  background:var(--s1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
-}
-.library-head h2{font-family:var(--font-display);font-size:24px;color:var(--gold);letter-spacing:2px;}
-
-.library-grid{
-  flex:1;overflow-y:auto;padding:20px;
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;
-  align-content:start;
-}
-.library-grid::-webkit-scrollbar{width:4px;}
-.library-grid::-webkit-scrollbar-thumb{background:var(--border2);}
-
-.library-card{
-  background:var(--s2);border:1px solid var(--border);border-radius:3px;
-  padding:14px;cursor:pointer;transition:all 0.15s;animation:slideUp 0.3s ease;
-}
-.library-card:hover{border-color:var(--gold);transform:translateY(-2px);}
-.library-card-title{
-  font-family:var(--font-display);font-size:18px;
-  color:var(--gold);letter-spacing:1px;margin-bottom:4px;
-}
-.library-card-date{
-  font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;
-}
-.library-card-sections{
-  font-family:var(--font-mono);font-size:9px;color:var(--rust);
-  letter-spacing:1px;text-transform:uppercase;
-}
-.library-card-actions{
-  display:flex;gap:6px;margin-top:10px;
-}
-.lib-btn{
-  font-family:var(--font-mono);font-size:9px;letter-spacing:1px;
-  padding:4px 10px;border-radius:2px;cursor:pointer;transition:all 0.12s;
-  border:1px solid var(--border2);color:var(--muted);background:transparent;
-}
-.lib-btn:hover{border-color:var(--gold);color:var(--gold);}
-.lib-btn.del:hover{border-color:var(--rust);color:var(--rust);}
-
-.library-empty{
-  grid-column:1/-1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  color:var(--muted);text-align:center;gap:10px;padding:60px 20px;
-}
-.library-empty .big{font-size:48px;opacity:0.2;}
-
-/* ── API KEY MODAL ── */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.8);
-  display:none;align-items:center;justify-content:center;z-index:1000;
-}
-.modal-overlay.open{display:flex;}
-.modal{
-  background:var(--s1);border:1px solid var(--border2);
-  border-radius:4px;padding:28px;width:440px;max-width:90vw;
-  animation:slideUp 0.2s ease;
-}
-.modal h3{
-  font-family:var(--font-display);font-size:22px;
-  color:var(--gold);letter-spacing:2px;margin-bottom:6px;
-}
-.modal p{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;}
-.modal input{
-  width:100%;background:var(--s2);border:1px solid var(--border);
-  border-radius:3px;color:var(--text);
-  font-family:var(--font-mono);font-size:13px;
-  padding:10px 12px;outline:none;margin-bottom:12px;
-  transition:border-color 0.15s;
-}
+/* MODALS */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:flex-end;justify-content:center;z-index:1000;}
+.moverlay.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--border2);border-radius:8px 8px 0 0;padding:24px 20px;width:100%;max-width:500px;animation:fu .25s ease;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.modal h3{font-family:var(--fd);font-size:20px;color:var(--gold);letter-spacing:2px;margin-bottom:6px;}
+.modal p{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:14px;}
+.mlabel{font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:block;}
+.modal input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--fm);font-size:13px;padding:11px 12px;outline:none;margin-bottom:12px;transition:border-color .15s;-webkit-appearance:none;}
 .modal input:focus{border-color:var(--gold);}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
-.modal-cancel{
-  background:transparent;border:1px solid var(--border2);color:var(--muted);
-  font-family:var(--font-mono);font-size:10px;padding:7px 16px;
-  border-radius:2px;cursor:pointer;transition:all 0.12s;
-}
-.modal-cancel:hover{border-color:var(--muted);}
-.modal-save{
-  background:var(--gold);color:var(--bg);border:none;
-  font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1px;
-  padding:7px 20px;border-radius:2px;cursor:pointer;transition:all 0.12s;
-}
-.modal-save:hover{background:var(--gold2);}
+.macts{display:flex;gap:8px;margin-top:4px;}
+.mcancel{background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:var(--fm);font-size:10px;padding:12px 16px;border-radius:2px;cursor:pointer;flex:1;}
+.msave{background:var(--gold);color:var(--bg);border:none;font-family:var(--fm);font-size:10px;font-weight:700;padding:12px 20px;border-radius:2px;cursor:pointer;flex:2;}
+.svmodal{position:fixed;inset:0;background:rgba(0,0,0,.95);display:none;flex-direction:column;z-index:1000;}
+.svmodal.open{display:flex;}
+.svinner{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--s1);}
+.svhead{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.svtitle{font-family:var(--fd);font-size:18px;color:var(--gold);letter-spacing:1px;}
+.svbody{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch;}
+.xbtn{background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:var(--fm);font-size:10px;padding:6px 12px;border-radius:2px;cursor:pointer;}
 
-/* Typing */
+/* TYPING */
 .typing{display:flex;gap:4px;padding:3px 0;align-items:center;}
-.tdot{
-  width:5px;height:5px;border-radius:50%;background:var(--muted);
-  animation:blink 1.2s infinite;
-}
-.tdot:nth-child(2){animation-delay:.2s;}
-.tdot:nth-child(3){animation-delay:.4s;}
-@keyframes blink{
-  0%,80%,100%{opacity:.2;transform:scale(.8)}
-  40%{opacity:1;transform:scale(1)}
-}
+.tdot{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite;}
+.tdot:nth-child(2){animation-delay:.2s;}.tdot:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
 
-/* Song view modal */
-.song-view-modal{
-  position:fixed;inset:0;background:rgba(0,0,0,0.85);
-  display:none;align-items:center;justify-content:center;z-index:1000;
-  padding:20px;
+/* DESKTOP */
+@media(min-width:700px){
+  .bnav{display:none;}
+  .dtabs{display:flex!important;gap:4px;margin-left:auto;}
+  .tbtn{font-family:var(--fm);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:2px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;}
+  .tbtn.active{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:700;}
+  .tbtn:hover:not(.active){border-color:var(--gold);color:var(--gold);}
+  #writeView{flex-direction:row;}
+  .wtabs{display:none;}
+  .wpanes{flex-direction:row;flex:1;}
+  .cpane{flex:1;border-right:1px solid var(--border);}
+  .cpane.hidden{display:flex!important;}
+  .spane{width:320px;flex-shrink:0;}
+  .spane.hidden{display:flex!important;}
+  .ctabs{display:none;}
+  .cbody{flex-direction:row;}
+  .cresult{display:block!important;flex:1;border-right:1px solid var(--border);}
+  .clpane{display:block!important;width:260px;flex-shrink:0;}
+  .lscroll{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));align-content:start;flex:none;height:100%;}
+  .moverlay{align-items:center;}
+  .modal{border-radius:4px;max-height:80vh;}
+  .svmodal{align-items:center;justify-content:center;padding:20px;}
+  .svinner{border-radius:4px;max-width:560px;width:100%;max-height:85vh;border:1px solid var(--border2);}
 }
-.song-view-modal.open{display:flex;}
-.song-view-inner{
-  background:var(--s1);border:1px solid var(--border2);border-radius:4px;
-  width:560px;max-width:95vw;max-height:85vh;
-  display:flex;flex-direction:column;overflow:hidden;animation:slideUp 0.2s ease;
-}
-.song-view-head{
-  padding:14px 18px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
-}
-.song-view-title{font-family:var(--font-display);font-size:20px;color:var(--gold);letter-spacing:1px;}
-.song-view-body{flex:1;overflow-y:auto;padding:16px;}
-.song-view-body::-webkit-scrollbar{width:3px;}
-.song-view-body::-webkit-scrollbar-thumb{background:var(--border2);}
-.close-btn{
-  background:transparent;border:1px solid var(--border2);color:var(--muted);
-  font-family:var(--font-mono);font-size:10px;padding:4px 10px;
-  border-radius:2px;cursor:pointer;transition:all 0.12s;
-}
-.close-btn:hover{border-color:var(--rust);color:var(--rust);}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
-  <div>
-    <div class="logo">Fretboard <span>AI</span></div>
-    <div class="tagline">Guitar · Songwriting · Studio</div>
+  <div class="logo">Fretboard <span>AI</span></div>
+  <div class="dtabs" style="display:none" id="dtabs">
+    <button class="tbtn active" onclick="sv('write')">✍ Write</button>
+    <button class="tbtn" onclick="sv('cover')">🎵 Covers</button>
+    <button class="tbtn" onclick="sv('library')">📚 Library</button>
   </div>
-  <div class="header-tabs">
-    <button class="tab-btn active" onclick="switchView('write')">✍ Write</button>
-    <button class="tab-btn" onclick="switchView('cover')">🎵 Cover Lookup</button>
-    <button class="tab-btn" onclick="switchView('library')">📚 Library</button>
+  <div class="hactions">
+    <button class="hbtn" onclick="manualSync()"><span class="dot" id="syncDot"></span><span id="syncLbl">☁ Sync</span></button>
+    <button class="hbtn" onclick="openSettings()"><span class="dot" id="apiDot"></span><span>Settings</span></button>
   </div>
-  <button class="api-key-btn" id="apiKeyBtn" onclick="openApiModal()">
-    <span class="dot" id="apiDot"></span>
-    <span id="apiKeyLabel">API Key</span>
-  </button>
-  <button class="api-key-btn" id="syncBtn" onclick="manualSync()">
-    <span class="dot" id="syncDot"></span>
-    <span id="syncLabel">☁ Sync</span>
-  </button>
 </div>
 
-<!-- ── WRITE VIEW ── -->
-<div class="view active" id="writeView">
-  <!-- Chat -->
-  <div class="chat-panel">
-    <div class="chat-messages" id="chatMessages">
-      <div class="msg ai">
-        <div class="avatar">🎸</div>
-        <div class="bubble">
-          Welcome to Fretboard AI. I'm your songwriting partner — let's build something together.<br><br>
-          Tell me the <strong>mood, feeling, or style</strong> you're going for and I'll map out chord progressions, song structure, and lyrics. Or ask me anything about songwriting.
+<div class="abody">
+
+  <!-- WRITE -->
+  <div class="view active" id="writeView">
+    <div class="wtabs">
+      <button class="wtab active" id="chatTab" onclick="showWPane('chat')">💬 Chat</button>
+      <button class="wtab" id="sheetTab" onclick="showWPane('sheet')">🎼 Song Sheet</button>
+    </div>
+    <div class="wpanes">
+
+      <!-- Chat -->
+      <div class="cpane" id="chatPane">
+        <div class="msgs" id="msgs">
+          <div class="msg ai">
+            <div class="av">🎸</div>
+            <div class="bub">Welcome to Fretboard AI. Tell me the <strong>mood, feeling, or style</strong> you want and I'll suggest chord progressions, riffs, song structure, and lyrics. I'll show you a preview before adding anything to your song sheet.</div>
+          </div>
+        </div>
+        <div class="qarea" id="qarea">
+          <button class="qp" onclick="sq('Something melancholic but hopeful — late night driving')">🌙 Melancholic</button>
+          <button class="qp" onclick="sq('Upbeat summer road trip energy')">☀️ Summer</button>
+          <button class="qp" onclick="sq('Dark brooding breakup song')">💔 Breakup</button>
+          <button class="qp" onclick="sq('Chill acoustic folk storytelling')">🪵 Folk</button>
+          <button class="qp" onclick="sq('Give me an intro riff')">🎸 Intro riff</button>
+          <button class="qp" onclick="sq('Write a verse')">📝 Verse</button>
+          <button class="qp" onclick="sq('Write the chorus')">🎵 Chorus</button>
+          <button class="qp" onclick="sq('Add a bridge')">🌉 Bridge</button>
+          <button class="qp" onclick="sq('Write lyrics for this section')">✍ Lyrics</button>
+          <button class="qp" onclick="sq('Give me a solo or lead riff')">⚡ Solo/Riff</button>
+        </div>
+        <div class="iarea">
+          <textarea class="ci" id="ci" placeholder="Describe a mood, ask for a section, request a riff or lyrics..." onkeydown="hk(event)" oninput="ar(this)"></textarea>
+          <button class="sbtn" id="sbtn" onclick="send()">➤</button>
         </div>
       </div>
-    </div>
 
-    <div class="quick-area" id="quickArea">
-      <button class="qp" onclick="sq('Something melancholic but hopeful — late night driving alone')">🌙 Melancholic + hopeful</button>
-      <button class="qp" onclick="sq('Upbeat summer road trip energy')">☀️ Summer road trip</button>
-      <button class="qp" onclick="sq('Dark and brooding breakup song')">💔 Dark breakup</button>
-      <button class="qp" onclick="sq('Chill acoustic folk storytelling feel')">🪵 Acoustic folk</button>
-      <button class="qp" onclick="sq('Give me a verse for my current song')">📝 Write a verse</button>
-      <button class="qp" onclick="sq('Now write the chorus')">🎵 Write chorus</button>
-      <button class="qp" onclick="sq('Add a bridge section')">🌉 Add bridge</button>
-      <button class="qp" onclick="sq('Write lyrics for the current section')">✍ Write lyrics</button>
-    </div>
+      <!-- Song Sheet -->
+      <div class="spane hidden" id="sheetPane">
+        <div class="shead">
+          <h2 class="stitle" id="stitle" onclick="editTitle()">Untitled Song</h2>
+          <div class="sacts">
+            <button class="ibtn" onclick="newSong()">+ New</button>
+            <button class="ibtn" onclick="exportSong()">⬇</button>
+            <button class="ibtn save" onclick="saveSong()">💾</button>
+          </div>
+        </div>
+        <div class="sscroll" id="sscroll">
+          <div class="sempty"><div class="big">🎼</div><div>Your song builds here.<br>Approve sections from the chat.</div></div>
+        </div>
+        <div class="diagbar" id="diagbar" style="display:none">
+          <div class="diagbar-title">Chord Diagrams — tap any chord pill</div>
+          <div class="diagrow" id="diagrow"></div>
+        </div>
+      </div>
 
-    <div class="input-area">
-      <textarea class="chat-input" id="chatInput"
-        placeholder="Describe a mood, ask for a section, request lyrics, say 'make it darker'..."
-        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-      <button class="send" id="sendBtn" onclick="sendChat()">➤</button>
     </div>
   </div>
 
-  <!-- Song Sheet -->
-  <div class="song-panel">
-    <div class="song-panel-head">
-      <h2 id="songTitleDisplay" title="Click to rename" onclick="editTitle()" style="cursor:pointer;border-bottom:1px dashed var(--border2);padding-bottom:1px" title="Click to rename">Untitled Song</h2>
-      <div class="song-actions">
-        <button class="icon-btn" onclick="newSong()">+ New</button>
-        <button class="icon-btn" onclick="exportSong()">⬇ TXT</button>
-        <button class="icon-btn save" onclick="saveSong()">💾 Save</button>
+  <!-- COVER -->
+  <div class="view" id="coverView">
+    <div class="csbar">
+      <div class="csrow">
+        <input class="cinput" id="cinput" placeholder="Song + artist (e.g. Blackbird Beatles)..." onkeydown="if(event.key==='Enter')lookupCover()">
+        <button class="lbtn" id="lbtn" onclick="lookupCover()">Look Up</button>
       </div>
     </div>
-
-    <div class="song-scroll" id="songScroll">
-      <div class="song-empty">
-        <div class="big">🎼</div>
-        <div>Your song builds here<br>section by section.</div>
-      </div>
+    <div class="ctabs">
+      <button class="ctab active" id="rtab" onclick="showCPane('result')">Results</button>
+      <button class="ctab" id="ltab" onclick="showCPane('list')">My Covers</button>
     </div>
-
-    <div class="diag-bar" id="diagBar" style="display:none">
-      <div class="diag-bar-title">Chord Diagrams — click any chord pill to refresh</div>
-      <div class="diag-row" id="diagRow"></div>
+    <div class="cbody">
+      <div class="cresult active" id="cresult">
+        <div class="sempty"><div class="big" style="font-size:28px">🔍</div><div>Search any song for chords,<br>tabs &amp; diagrams.</div></div>
+      </div>
+      <div class="clpane" id="clpane">
+        <div id="clscroll"><div class="clempty">No covers saved yet.</div></div>
+      </div>
     </div>
   </div>
+
+  <!-- LIBRARY -->
+  <div class="view" id="libraryView">
+    <div class="lhead"><h2>MY SONGS</h2><button class="ibtn" onclick="sv('write')">+ New</button></div>
+    <div class="lscroll" id="lgrid"><div class="lempty"><div class="big">🎵</div><div>No songs saved yet.</div></div></div>
+  </div>
+
 </div>
 
-<!-- ── COVER VIEW ── -->
-<div class="view" id="coverView">
-  <div class="cover-lookup">
-    <div class="cover-lookup-top">
-      <h3>COVER CHORD LOOKUP</h3>
-      <div class="cover-search-row">
-        <input class="cover-input" id="coverInput"
-          placeholder="Song name + artist (e.g. Blackbird by Beatles)..."
-          onkeydown="if(event.key==='Enter') lookupCover()">
-        <button class="lookup-btn" id="lookupBtn" onclick="lookupCover()">Look Up Chords</button>
-      </div>
-    </div>
-    <div class="cover-result" id="coverResult">
-      <div class="song-empty" style="height:200px">
-        <div class="big" style="font-size:28px">🔍</div>
-        <div>Enter any song to get its chords,<br>key, and how to play it.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="cover-list-panel">
-    <div class="cover-list-head">
-      <h3>MY COVERS</h3>
-    </div>
-    <div class="cover-list-scroll" id="coverListScroll">
-      <div class="cover-list-empty">No covers saved yet.<br>Look up a song and save it.</div>
-    </div>
-  </div>
+<div class="bnav">
+  <button class="nbtn active" id="navWrite" onclick="sv('write')"><span class="ni">✍️</span>Write</button>
+  <button class="nbtn" id="navCover" onclick="sv('cover')"><span class="ni">🎵</span>Covers</button>
+  <button class="nbtn" id="navLibrary" onclick="sv('library')"><span class="ni">📚</span>Library</button>
 </div>
 
-<!-- ── LIBRARY VIEW ── -->
-<div class="view" id="libraryView">
-  <div class="library-head">
-    <h2>MY SONGS</h2>
-    <button class="icon-btn" onclick="switchView('write')">+ New Song</button>
-  </div>
-  <div class="library-grid" id="libraryGrid">
-    <div class="library-empty">
-      <div class="big">🎵</div>
-      <div>No songs saved yet.<br>Write something and hit Save.</div>
-    </div>
-  </div>
-</div>
-
-<!-- API KEY MODAL -->
-<div class="modal-overlay" id="apiModal">
+<!-- SETTINGS MODAL -->
+<div class="moverlay" id="settingsModal">
   <div class="modal">
     <h3>SETTINGS</h3>
-    <p>All keys stored only in your browser's localStorage — never in the repo or anywhere else.</p>
-
-    <p style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Anthropic API Key</p>
-    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
-    <p style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:16px">Get one at <strong style="color:var(--gold)">console.anthropic.com</strong> → API Keys</p>
-
-    <p style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">JSONBin Master Key <span style="color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">(for cross-device sync)</span></p>
-    <input type="password" id="jsonbinKeyInput" placeholder="$2a$10$...">
-
-    <p style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;margin-top:4px">JSONBin Bin ID</p>
-    <input type="text" id="jsonbinBinInput" placeholder="65f3a2b1...">
-    <p style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:16px">Create a bin at <strong style="color:var(--gold)">jsonbin.io</strong> with <code style="color:var(--text)">{"songs":[],"covers":[]}</code></p>
-
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeApiModal()">Cancel</button>
-      <button class="modal-save" onclick="saveApiKey()">Save Settings</button>
+    <p>Keys stored in your browser only — never in the repo.</p>
+    <span class="mlabel">Anthropic API Key</span>
+    <input type="password" id="akInput" placeholder="sk-ant-api03-...">
+    <p style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:16px">Get at <strong style="color:var(--gold)">console.anthropic.com</strong> → API Keys</p>
+    <span class="mlabel">JSONBin Master Key</span>
+    <input type="password" id="jkInput" placeholder="$2a$10$...">
+    <span class="mlabel" style="margin-top:4px">JSONBin Bin ID</span>
+    <input type="text" id="jbInput" placeholder="65f3a2b1...">
+    <p style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:16px">Create bin at <strong style="color:var(--gold)">jsonbin.io</strong> with <code>{"songs":[],"covers":[]}</code></p>
+    <div class="macts">
+      <button class="mcancel" onclick="closeSettings()">Cancel</button>
+      <button class="msave" onclick="saveSettings()">Save Settings</button>
     </div>
   </div>
 </div>
 
 <!-- SONG VIEW MODAL -->
-<div class="song-view-modal" id="songViewModal">
-  <div class="song-view-inner">
-    <div class="song-view-head">
-      <div class="song-view-title" id="svTitle"></div>
+<div class="svmodal" id="svmodal">
+  <div class="svinner">
+    <div class="svhead">
+      <div class="svtitle" id="svtitle"></div>
       <div style="display:flex;gap:6px">
-        <button class="icon-btn" onclick="exportSavedSong()">⬇ TXT</button>
-        <button class="close-btn" onclick="closeSongView()">✕ Close</button>
+        <button class="ibtn" onclick="exportSavedSong()">⬇ TXT</button>
+        <button class="xbtn" onclick="closeSV()">✕ Close</button>
       </div>
     </div>
-    <div class="song-view-body" id="svBody"></div>
+    <div class="svbody" id="svbody"></div>
   </div>
 </div>
 
 <script>
-// ─── State ────────────────────────────────────────────────────────
-let apiKey = localStorage.getItem('fretboard_api_key') || '';
-let jsonbinKey = localStorage.getItem('fretboard_jsonbin_key') || '';
-let jsonbinBin = localStorage.getItem('fretboard_jsonbin_bin') || '';
-
-// Restore session from localStorage
-const _sess = JSON.parse(localStorage.getItem('fretboard_session') || '{}');
-let chatHistory = _sess.chatHistory || [];
-let songSections = _sess.songSections || [];
-let songTitle = _sess.songTitle || 'Untitled Song';
-let isLoading = false;
-let currentCoverData = null;
-let viewingSong = null;
-
-function persistSession(){
-  localStorage.setItem('fretboard_session', JSON.stringify({
-    chatHistory, songSections, songTitle
-  }));
+// ── Responsive ───────────────────────────────────────────────────
+function initLayout(){
+  const d=window.innerWidth>=700;
+  document.getElementById('dtabs').style.display=d?'flex':'none';
+  if(d){
+    document.getElementById('chatPane').classList.remove('hidden');
+    document.getElementById('sheetPane').classList.remove('hidden');
+  }
 }
+initLayout();
+window.addEventListener('resize',initLayout);
 
-// ─── Chord shapes (strings 0=low E to 5=high e, value=fret, -1=mute) ─
-const SHAPES = {
-  'Am':[0,0,2,2,1,0],'A':[0,0,2,2,2,0],'A7':[0,0,2,0,2,0],
-  'C':[0,3,2,0,1,0],'Cadd9':[0,3,2,0,3,3],
-  'D':[0,0,0,2,3,2],'Dm':[0,0,0,2,3,1],'D7':[0,0,0,2,1,2],
-  'E':[0,2,2,1,0,0],'Em':[0,2,2,0,0,0],'E7':[0,2,0,1,0,0],
-  'F':[1,3,3,2,1,1],'Fmaj7':[0,0,3,2,1,0],
-  'G':[3,2,0,0,0,3],'G7':[3,2,0,0,0,1],
-  'Bm':[0,2,4,4,3,2],'B7':[0,2,1,2,0,2],
-  'Gmaj7':[3,2,0,0,0,2],'Cmaj7':[0,3,2,0,0,0],
-  'Am7':[0,0,2,0,1,0],'Em7':[0,2,2,0,3,0],
-};
+// ── State ────────────────────────────────────────────────────────
+let apiKey=localStorage.getItem('fa_ak')||'';
+let jbKey=localStorage.getItem('fa_jk')||'';
+let jbBin=localStorage.getItem('fa_jb')||'';
+const _s=JSON.parse(localStorage.getItem('fa_sess')||'{}');
+let chatHist=_s.chatHist||[];
+let sections=_s.sections||[];
+let songTitle=_s.songTitle||'Untitled Song';
+let isLoading=false,coverData=null,viewingSong=null;
+let pendingSection=null; // section awaiting commit
 
-function drawDiagram(name) {
-  const shape = SHAPES[name];
-  if (!shape) return '';
+function persist(){localStorage.setItem('fa_sess',JSON.stringify({chatHist,sections,songTitle}));}
+
+// ── Chord shapes ─────────────────────────────────────────────────
+const SHP={'Am':[0,0,2,2,1,0],'A':[0,0,2,2,2,0],'A7':[0,0,2,0,2,0],'C':[0,3,2,0,1,0],'Cadd9':[0,3,2,0,3,3],'D':[0,0,0,2,3,2],'Dm':[0,0,0,2,3,1],'D7':[0,0,0,2,1,2],'E':[0,2,2,1,0,0],'Em':[0,2,2,0,0,0],'E7':[0,2,0,1,0,0],'F':[1,3,3,2,1,1],'Fmaj7':[0,0,3,2,1,0],'G':[3,2,0,0,0,3],'G7':[3,2,0,0,0,1],'Bm':[0,2,4,4,3,2],'B7':[0,2,1,2,0,2],'Gmaj7':[3,2,0,0,0,2],'Cmaj7':[0,3,2,0,0,0],'Am7':[0,0,2,0,1,0],'Em7':[0,2,2,0,3,0]};
+
+function drawDiag(name){
+  const shape=SHP[name];if(!shape)return'';
   const strings=6,frets=4,sw=9,sh=11,px=16,py=18;
-  const w=sw*(strings-1)+px*2, h=sh*frets+py+16;
-  const fretted=shape.filter(f=>f>0);
-  const minFret=fretted.length?Math.min(...fretted):0;
-  const offset=minFret>2?minFret-1:0;
+  const w=sw*(strings-1)+px*2,h=sh*frets+py+16;
+  const fr=shape.filter(f=>f>0),mn=fr.length?Math.min(...fr):0,off=mn>2?mn-1:0;
   let s=`<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">`;
-  if(offset===0){
-    s+=`<line x1="${px}" y1="${py}" x2="${px+sw*(strings-1)}" y2="${py}" stroke="#d4a843" stroke-width="2.5"/>`;
-  } else {
-    s+=`<text x="${px-4}" y="${py+sh*.7}" text-anchor="end" fill="#556070" font-size="7" font-family="monospace">${offset+1}fr</text>`;
-  }
-  for(let f=1;f<=frets;f++){
-    const y=py+f*sh;
-    s+=`<line x1="${px}" y1="${y}" x2="${px+sw*(strings-1)}" y2="${y}" stroke="#252d3d" stroke-width=".8"/>`;
-  }
-  for(let i=0;i<strings;i++){
-    const x=px+i*sw;
-    s+=`<line x1="${x}" y1="${py}" x2="${x}" y2="${py+sh*frets}" stroke="#2e3848" stroke-width=".8"/>`;
-  }
+  if(off===0)s+=`<line x1="${px}" y1="${py}" x2="${px+sw*(strings-1)}" y2="${py}" stroke="#d4a843" stroke-width="2.5"/>`;
+  else s+=`<text x="${px-4}" y="${py+sh*.7}" text-anchor="end" fill="#556070" font-size="7" font-family="monospace">${off+1}fr</text>`;
+  for(let f=1;f<=frets;f++){const y=py+f*sh;s+=`<line x1="${px}" y1="${y}" x2="${px+sw*(strings-1)}" y2="${y}" stroke="#252d3d" stroke-width=".8"/>`;}
+  for(let i=0;i<strings;i++){const x=px+i*sw;s+=`<line x1="${x}" y1="${py}" x2="${x}" y2="${py+sh*frets}" stroke="#2e3848" stroke-width=".8"/>`;}
   shape.forEach((fret,i)=>{
     const x=px+i*sw;
-    if(fret===-1){
-      s+=`<text x="${x}" y="${py-5}" text-anchor="middle" fill="#556070" font-size="9" font-family="monospace">×</text>`;
-    } else if(fret===0){
-      s+=`<circle cx="${x}" cy="${py-7}" r="3.5" fill="none" stroke="#d4a843" stroke-width="1.2"/>`;
-    } else {
-      const adj=fret-offset;
-      s+=`<circle cx="${x}" cy="${py+(adj-.5)*sh}" r="4" fill="#d4a843"/>`;
-    }
+    if(fret===-1)s+=`<text x="${x}" y="${py-5}" text-anchor="middle" fill="#556070" font-size="9" font-family="monospace">×</text>`;
+    else if(fret===0)s+=`<circle cx="${x}" cy="${py-7}" r="3.5" fill="none" stroke="#d4a843" stroke-width="1.2"/>`;
+    else{const a=fret-off;s+=`<circle cx="${x}" cy="${py+(a-.5)*sh}" r="4" fill="#d4a843"/>`;}
   });
-  s+=`</svg>`;
-  return s;
+  return s+`</svg>`;
 }
 
-function showDiagrams(chords) {
-  const bar=document.getElementById('diagBar');
-  const row=document.getElementById('diagRow');
-  const known=chords.filter(c=>SHAPES[c]);
+function showDiags(chords){
+  const bar=document.getElementById('diagbar'),row=document.getElementById('diagrow');
+  const known=chords.filter(c=>SHP[c]);
   if(!known.length){bar.style.display='none';return;}
   bar.style.display='block';
-  row.innerHTML=known.map(c=>`
-    <div class="diag-item">
-      <div class="diag-name">${c}</div>
-      ${drawDiagram(c)}
-    </div>`).join('');
+  row.innerHTML=known.map(c=>`<div class="ditem"><div class="dname">${c}</div>${drawDiag(c)}</div>`).join('');
 }
 
-// ─── API ──────────────────────────────────────────────────────────
-function updateApiDot(){
-  const dot=document.getElementById('apiDot');
-  const lbl=document.getElementById('apiKeyLabel');
-  if(apiKey){dot.className='dot ok';lbl.textContent='Key Set ✓';}
-  else{dot.className='dot';lbl.textContent='API Key';}
-}
-updateApiDot();
-
-function openApiModal(){
-  document.getElementById('apiKeyInput').value=apiKey;
-  document.getElementById('jsonbinKeyInput').value=jsonbinKey;
-  document.getElementById('jsonbinBinInput').value=jsonbinBin;
-  document.getElementById('apiModal').classList.add('open');
-}
-function closeApiModal(){document.getElementById('apiModal').classList.remove('open');}
-function saveApiKey(){
-  apiKey=document.getElementById('apiKeyInput').value.trim();
-  jsonbinKey=document.getElementById('jsonbinKeyInput').value.trim();
-  jsonbinBin=document.getElementById('jsonbinBinInput').value.trim();
-  localStorage.setItem('fretboard_api_key',apiKey);
-  localStorage.setItem('fretboard_jsonbin_key',jsonbinKey);
-  localStorage.setItem('fretboard_jsonbin_bin',jsonbinBin);
-  updateApiDot();
-  updateSyncDot();
-  closeApiModal();
-  if(jsonbinKey&&jsonbinBin) pullFromCloud();
-}
-
-// ─── JSONBin Sync ─────────────────────────────────────────────────
-function updateSyncDot(){
-  const dot=document.getElementById('syncDot');
-  const lbl=document.getElementById('syncLabel');
-  if(jsonbinKey&&jsonbinBin){dot.className='dot ok';lbl.textContent='☁ Sync';}
-  else{dot.className='dot';lbl.textContent='☁ Sync';}
-}
-updateSyncDot();
-
-async function pushToCloud(){
-  if(!jsonbinKey||!jsonbinBin)return;
-  const songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
-  const covers=JSON.parse(localStorage.getItem('fretboard_covers')||'[]');
-  try{
-    await fetch(`https://api.jsonbin.io/v3/b/${jsonbinBin}`,{
-      method:'PUT',
-      headers:{
-        'Content-Type':'application/json',
-        'X-Master-Key':jsonbinKey
-      },
-      body:JSON.stringify({songs,covers})
-    });
-    setSyncStatus('✓ Synced',false);
-  }catch(e){
-    setSyncStatus('Sync failed',true);
-  }
-}
-
-async function pullFromCloud(){
-  if(!jsonbinKey||!jsonbinBin)return;
-  setSyncStatus('Syncing...',false);
-  try{
-    const res=await fetch(`https://api.jsonbin.io/v3/b/${jsonbinBin}/latest`,{
-      headers:{'X-Master-Key':jsonbinKey}
-    });
-    const data=await res.json();
-    const cloud=data.record;
-    if(cloud.songs) localStorage.setItem('fretboard_songs',JSON.stringify(cloud.songs));
-    if(cloud.covers){
-      localStorage.setItem('fretboard_covers',JSON.stringify(cloud.covers));
-      renderCovers();
-    }
-    renderLibrary();
-    setSyncStatus('✓ Pulled',false);
-  }catch(e){
-    setSyncStatus('Sync failed',true);
-  }
-}
-
-async function manualSync(){
-  if(!jsonbinKey||!jsonbinBin){openApiModal();return;}
-  await pushToCloud();
-  await pullFromCloud();
-}
-
-function setSyncStatus(msg,isError){
-  const lbl=document.getElementById('syncLabel');
-  lbl.textContent='☁ '+msg;
-  if(isError) lbl.style.color='var(--rust)';
-  else lbl.style.color='';
-  setTimeout(()=>{lbl.textContent='☁ Sync';lbl.style.color='';},3000);
-}
-
-async function callClaude(system, messages, maxTokens=1200){
-  if(!apiKey) throw new Error('NO_KEY');
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'x-api-key':apiKey,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-direct-browser-access':'true'
-    },
-    body:JSON.stringify({
-      model:'claude-sonnet-4-5',
-      max_tokens:maxTokens,
-      system,
-      messages
-    })
-  });
-  const data=await res.json();
-  if(data.error) throw new Error(data.error.message||'API error');
-  return data.content.map(b=>b.text||'').join('');
-}
-
-// ─── Parse JSON block from AI ──────────────────────────────────────
-function parseBlock(text){
-  const m=text.match(/```json\s*([\s\S]*?)\s*```/);
-  if(m){try{return JSON.parse(m[1]);}catch(e){}}
-  return null;
-}
-
-// ─── Views ────────────────────────────────────────────────────────
-function switchView(v){
-  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+// ── Navigation ───────────────────────────────────────────────────
+function sv(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tbtn').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.nbtn').forEach(e=>e.classList.remove('active'));
   document.getElementById(v+'View').classList.add('active');
   const idx={write:0,cover:1,library:2}[v];
-  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
-  if(v==='library') renderLibrary();
+  document.querySelectorAll('.tbtn')[idx]?.classList.add('active');
+  document.getElementById('nav'+v[0].toUpperCase()+v.slice(1))?.classList.add('active');
+  if(v==='library')renderLib();
 }
 
-// ─── Song Sheet ───────────────────────────────────────────────────
-function addSection(sec){
-  const i=songSections.findIndex(s=>s.label===sec.label);
-  if(i>=0) songSections[i]=sec; else songSections.push(sec);
-  persistSession();
-  renderSheet();
+function showWPane(p){
+  const cp=document.getElementById('chatPane'),sp=document.getElementById('sheetPane');
+  const ct=document.getElementById('chatTab'),st=document.getElementById('sheetTab');
+  if(p==='chat'){cp.classList.remove('hidden');sp.classList.add('hidden');ct.classList.add('active');st.classList.remove('active');}
+  else{sp.classList.remove('hidden');cp.classList.add('hidden');st.classList.add('active');ct.classList.remove('active');}
+}
+
+function showCPane(p){
+  const r=document.getElementById('cresult'),l=document.getElementById('clpane');
+  const rt=document.getElementById('rtab'),lt=document.getElementById('ltab');
+  if(p==='result'){r.classList.add('active');l.classList.remove('active');rt.classList.add('active');lt.classList.remove('active');}
+  else{l.classList.add('active');r.classList.remove('active');lt.classList.add('active');rt.classList.remove('active');}
+}
+
+// ── Settings ─────────────────────────────────────────────────────
+function updateDots(){
+  document.getElementById('apiDot').className=apiKey?'dot ok':'dot';
+  document.getElementById('syncDot').className=(jbKey&&jbBin)?'dot ok':'dot';
+}
+updateDots();
+
+function openSettings(){document.getElementById('akInput').value=apiKey;document.getElementById('jkInput').value=jbKey;document.getElementById('jbInput').value=jbBin;document.getElementById('settingsModal').classList.add('open');}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
+function saveSettings(){
+  apiKey=document.getElementById('akInput').value.trim();
+  jbKey=document.getElementById('jkInput').value.trim();
+  jbBin=document.getElementById('jbInput').value.trim();
+  localStorage.setItem('fa_ak',apiKey);localStorage.setItem('fa_jk',jbKey);localStorage.setItem('fa_jb',jbBin);
+  updateDots();closeSettings();
+  if(jbKey&&jbBin)pullCloud();
+}
+
+// ── JSONBin ───────────────────────────────────────────────────────
+async function pushCloud(){
+  if(!jbKey||!jbBin)return;
+  const songs=JSON.parse(localStorage.getItem('fa_songs')||'[]');
+  const covers=JSON.parse(localStorage.getItem('fa_covers')||'[]');
+  try{await fetch(`https://api.jsonbin.io/v3/b/${jbBin}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':jbKey},body:JSON.stringify({songs,covers})});setSyncSt('✓ Synced',false);}
+  catch(e){setSyncSt('Failed',true);}
+}
+async function pullCloud(){
+  if(!jbKey||!jbBin)return;setSyncSt('Syncing...',false);
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${jbBin}/latest`,{headers:{'X-Master-Key':jbKey}});
+    const d=await res.json(),c=d.record;
+    if(c.songs)localStorage.setItem('fa_songs',JSON.stringify(c.songs));
+    if(c.covers){localStorage.setItem('fa_covers',JSON.stringify(c.covers));renderCovers();}
+    renderLib();setSyncSt('✓ Pulled',false);
+  }catch(e){setSyncSt('Failed',true);}
+}
+async function manualSync(){if(!jbKey||!jbBin){openSettings();return;}await pushCloud();await pullCloud();}
+function setSyncSt(m,e){const l=document.getElementById('syncLbl');l.textContent='☁ '+m;l.style.color=e?'var(--rust)':'';setTimeout(()=>{l.textContent='☁ Sync';l.style.color='';},3000);}
+
+// ── Claude API ────────────────────────────────────────────────────
+async function callClaude(sys,msgs,mt=1400){
+  if(!apiKey)throw new Error('NO_KEY');
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:mt,system:sys,messages:msgs})});
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message||'API error');
+  return d.content.map(b=>b.text||'').join('');
+}
+
+function parseJSON(txt){const m=txt.match(/```json\s*([\s\S]*?)\s*```/);if(m){try{return JSON.parse(m[1]);}catch(e){}}return null;}
+
+// ── Song Sheet ────────────────────────────────────────────────────
+function commitSection(sec){
+  const i=sections.findIndex(s=>s.label===sec.label);
+  if(i>=0)sections[i]=sec;else sections.push(sec);
+  persist();renderSheet();
+  // On mobile, flash to sheet pane
+  if(window.innerWidth<700)showWPane('sheet');
 }
 
 function renderSheet(){
-  const el=document.getElementById('songScroll');
-  if(!songSections.length){
-    el.innerHTML=`<div class="song-empty"><div class="big">🎼</div><div>Your song builds here<br>section by section.</div></div>`;
-    return;
-  }
-  el.innerHTML=songSections.map(s=>`
-    <div class="section-block">
-      <div class="section-block-head">
-        <span class="section-block-label">${s.label}</span>
-      </div>
-      <div class="section-block-chords">${s.chords}</div>
-      <div class="section-block-lyrics">${s.lyrics||'<span class="no-lyrics">No lyrics yet — ask me to write some!</span>'}</div>
-    </div>`).join('');
+  const el=document.getElementById('sscroll');
+  if(!sections.length){el.innerHTML=`<div class="sempty"><div class="big">🎼</div><div>Your song builds here.<br>Approve sections from the chat.</div></div>`;return;}
+  el.innerHTML=sections.map(s=>{
+    if(s.stype==='tab'){
+      return `<div class="sblock">
+        <div class="sblock-head"><span class="sblock-label">${s.label}</span><span class="sblock-type">Tab</span></div>
+        <div class="sblock-tab">${s.tab}</div>
+        ${s.lyrics?`<div class="sblock-lyrics">${s.lyrics}</div>`:''}
+      </div>`;
+    } else {
+      return `<div class="sblock">
+        <div class="sblock-head"><span class="sblock-label">${s.label}</span><span class="sblock-type">Chords</span></div>
+        <div class="sblock-chords">${s.chords}</div>
+        ${s.pattern?`<div class="sblock-pattern">${s.pattern}</div>`:''}
+        ${s.lyrics?`<div class="sblock-lyrics">${s.lyrics}</div>`:`<div class="sblock-lyrics"><span class="nolyr">No lyrics yet — ask me to write some</span></div>`}
+      </div>`;
+    }
+  }).join('');
 }
 
-// ─── Chat ─────────────────────────────────────────────────────────
-function addMsg(role, html, chords, tag){
-  const c=document.getElementById('chatMessages');
-  const d=document.createElement('div');
+// ── Commit Card ───────────────────────────────────────────────────
+function buildCommitCard(sec,msgId){
+  let preview='';
+  if(sec.stype==='tab'){
+    preview=`<div class="commit-preview-tab">${sec.tab}</div>`;
+  } else {
+    preview=`<div class="commit-preview-chords">${sec.chords}</div>`;
+    if(sec.pattern)preview+=`<div style="font-family:var(--fm);font-size:10px;color:var(--muted);margin-top:3px">${sec.pattern}</div>`;
+  }
+  if(sec.lyrics)preview+=`<div class="commit-preview-lyrics">${sec.lyrics}</div>`;
+
+  return `<div class="commit-card" id="cc_${msgId}">
+    <div class="commit-preview">
+      <div class="commit-preview-label">${sec.label} — ${sec.stype==='tab'?'Tab':'Chords'}</div>
+      ${preview}
+    </div>
+    <div class="commit-actions">
+      <button class="commit-btn add" onclick="doCommit('${msgId}')">✓ Add to Song</button>
+      <button class="commit-btn retry" onclick="doRetry('${msgId}')">↺ Try Again</button>
+      <button class="commit-btn discard" onclick="doDiscard('${msgId}')">✕</button>
+    </div>
+  </div>`;
+}
+
+function doCommit(msgId){
+  const sec=pendingSections[msgId];
+  if(!sec)return;
+  commitSection(sec);
+  const card=document.getElementById('cc_'+msgId);
+  if(card){
+    card.innerHTML=`<div style="padding:10px 12px;font-family:var(--fm);font-size:10px;color:var(--green);letter-spacing:1px">✓ Added to song sheet</div>`;
+  }
+  delete pendingSections[msgId];
+}
+
+function doRetry(msgId){
+  const card=document.getElementById('cc_'+msgId);
+  if(card)card.innerHTML=`<div style="padding:10px 12px;font-family:var(--fm);font-size:10px;color:var(--muted)">Asking for a different version...</div>`;
+  delete pendingSections[msgId];
+  const lastReq=retryRequests[msgId]||'Give me a different version of that section';
+  sq(lastReq);
+}
+
+function doDiscard(msgId){
+  const card=document.getElementById('cc_'+msgId);
+  if(card)card.innerHTML=`<div style="padding:10px 12px;font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:1px">Discarded</div>`;
+  delete pendingSections[msgId];
+}
+
+const pendingSections={};
+const retryRequests={};
+
+// ── Chat ─────────────────────────────────────────────────────────
+function addMsg(role,html,chords,commitCard){
+  const c=document.getElementById('msgs'),d=document.createElement('div');
   d.className=`msg ${role}`;
   const av=role==='user'?'🎸':'🎵';
-  const tagHtml=tag?`<div class="sec-tag">${tag}</div>`:'';
-  const pills=(chords&&chords.length)?`<div class="chord-pills">${chords.map(ch=>`<span class="pill" onclick="showDiagrams(['${ch}'])">${ch}</span>`).join('')}</div>`:'';
-  d.innerHTML=`<div class="avatar">${av}</div><div class="bubble">${tagHtml}${html}${pills}</div>`;
-  c.appendChild(d);
-  c.scrollTop=c.scrollHeight;
-}
-
-function showTyping(){
-  const c=document.getElementById('chatMessages');
-  const d=document.createElement('div');
-  d.className='msg ai';d.id='typing';
-  d.innerHTML=`<div class="avatar">🎵</div><div class="bubble"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+  const pills=(chords&&chords.length)?`<div class="cpills">${chords.map(ch=>`<span class="pill" onclick="showDiags(['${ch}'])">${ch}</span>`).join('')}</div>`:'';
+  const card=commitCard||'';
+  d.innerHTML=`<div class="av">${av}</div><div class="bub">${html}${pills}${card}</div>`;
   c.appendChild(d);c.scrollTop=c.scrollHeight;
 }
+
+function showTyping(){const c=document.getElementById('msgs'),d=document.createElement('div');d.className='msg ai';d.id='typing';d.innerHTML=`<div class="av">🎵</div><div class="bub"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;c.appendChild(d);c.scrollTop=c.scrollHeight;}
 function removeTyping(){const e=document.getElementById('typing');if(e)e.remove();}
 
-async function sendChat(){
-  const inp=document.getElementById('chatInput');
-  const txt=inp.value.trim();
+async function send(){
+  const inp=document.getElementById('ci'),txt=inp.value.trim();
   if(!txt||isLoading)return;
-  if(!apiKey){openApiModal();return;}
-
-  isLoading=true;
-  inp.value='';inp.style.height='auto';
-  document.getElementById('sendBtn').disabled=true;
-  document.getElementById('quickArea').style.display='none';
-
+  if(!apiKey){openSettings();return;}
+  isLoading=true;inp.value='';inp.style.height='auto';
+  document.getElementById('sbtn').disabled=true;
+  document.getElementById('qarea').style.display='none';
   addMsg('user',txt.replace(/\n/g,'<br>'));
   showTyping();
-  chatHistory.push({role:'user',content:txt});
+  chatHist.push({role:'user',content:txt});
+  if(window.innerWidth<700)showWPane('chat');
 
-  const sys=`You are Fretboard AI — a world-class guitar-focused songwriting partner. Help the user build complete songs through conversation.
+  const sys=`You are Fretboard AI — an expert guitar-focused songwriting partner.
 
-Your abilities:
-- Translate moods/feelings into chord progressions
-- Build song structure: Intro, Verse 1, Verse 2, Pre-Chorus, Chorus, Bridge, Outro
-- Write lyrics that match the chords and vibe
-- Suggest variations, make it "darker", "more hopeful", etc.
-- Give music theory explanations when helpful
+Help the user build a complete song. Each response suggests ONE section at a time.
 
-ALWAYS end your response with a JSON block:
+A section is EITHER:
+- "chords" type: for strummed/picked chord-based parts (verses, choruses, intros with chords)
+- "tab" type: for single-note riffs, solos, or melodic lines (intro riffs, bridges with a lead line, solos, outros with a signature lick)
+
+You decide which type fits based on what's being described. A verse = chords. An intro riff = tab. A solo = tab. A chorus = chords. A melodic bridge = tab.
+
+ALWAYS end your response with this JSON block:
 \`\`\`json
 {
   "section": {
-    "label": "Chorus",
-    "chords": "C - G - Am - F (repeat)",
-    "lyrics": "Optional lyrics if writing them\\nSecond line\\nThird line"
+    "label": "Intro",
+    "stype": "tab",
+    "tab": "e|--0--3--5--3--0------------|\\nB|------------------3--1--0--|\\nG|---------------------------|\\nD|---------------------------|\\nA|---------------------------|\\nE|---------------------------|",
+    "chords": null,
+    "pattern": null,
+    "lyrics": null
   },
-  "chords": ["C","G","Am","F"],
-  "title": "My Song Title"
+  "chords": ["Am","C","G"],
+  "title": null
 }
 \`\`\`
 
-JSON rules:
-- section.label: Intro | Verse 1 | Verse 2 | Pre-Chorus | Chorus | Bridge | Outro
-- section.chords: readable string like "Am - F - C - G (4x)" 
-- section.lyrics: omit if not writing lyrics; use \\n for line breaks
-- chords: array of unique chord names for diagram display
-- title: only set when you have a compelling title idea; omit otherwise
-- Prose before JSON: warm, musical, 2-5 sentences
-- Use guitar-friendly voicings in standard tuning
-- ALWAYS include the JSON block, even for general conversation (use null for section if just chatting)
-
-Current song: title="${songTitle}", sections=${JSON.stringify(songSections)}`;
-
-  try{
-    const full=await callClaude(sys,chatHistory);
-    chatHistory.push({role:'assistant',content:full});
-
-    const parsed=parseBlock(full);
-    const prose=full.replace(/```json[\s\S]*?```/,'').trim();
-    const chords=parsed?.chords||[];
-
-    if(parsed?.title&&parsed.title!=='Untitled Song'){
-      songTitle=parsed.title;
-      document.getElementById('songTitleDisplay').textContent=songTitle;
-    }
-    if(parsed?.section&&parsed.section.label){
-      addSection(parsed.section);
-    }
-    if(chords.length) showDiagrams(chords);
-
-    removeTyping();
-    addMsg('ai',prose.replace(/\n/g,'<br>'),chords,parsed?.section?.label||null);
-    persistSession();
-
-  }catch(err){
-    removeTyping();
-    chatHistory.pop();
-    if(err.message==='NO_KEY'){
-      addMsg('ai','Please set your API key first — click <strong>API Key</strong> in the top right.');
-    } else {
-      addMsg('ai',`Error: ${err.message}`);
-    }
-  }
-
-  isLoading=false;
-  document.getElementById('sendBtn').disabled=false;
-}
-
-function sq(t){document.getElementById('chatInput').value=t;sendChat();}
-
-function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
-function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px';}
-
-// ─── Save / Export Song ───────────────────────────────────────────
-function editTitle(){
-  const el=document.getElementById('songTitleDisplay');
-  const current=songTitle;
-  el.style.display='none';
-  const inp=document.createElement('input');
-  inp.value=current;
-  inp.style.cssText=`
-    background:var(--s2);border:1px solid var(--gold);border-radius:2px;
-    color:var(--gold);font-family:var(--font-display);font-size:16px;
-    letter-spacing:1px;padding:2px 6px;outline:none;width:160px;
-  `;
-  el.parentNode.insertBefore(inp,el);
-  inp.focus();inp.select();
-  function commit(){
-    const val=inp.value.trim()||current;
-    songTitle=val;
-    el.textContent=val;
-    el.style.display='';
-    inp.remove();
-    persistSession();
-  }
-  inp.addEventListener('blur',commit);
-  inp.addEventListener('keydown',e=>{
-    if(e.key==='Enter')commit();
-    if(e.key==='Escape'){inp.value=current;commit();}
-  });
-}
-
-function newSong(){
-  if(songSections.length&&!confirm('Start a new song? Current unsaved work will be lost.'))return;
-  songTitle='Untitled Song';
-  songSections=[];
-  chatHistory=[];
-  persistSession();
-  document.getElementById('songTitleDisplay').textContent=songTitle;
-  renderSheet();
-  document.getElementById('chatMessages').innerHTML=`
-    <div class="msg ai">
-      <div class="avatar">🎸</div>
-      <div class="bubble">Fresh start! Tell me the <strong>mood, feeling, or style</strong> you're going for and let's build something new.</div>
-    </div>`;
-  document.getElementById('quickArea').style.display='flex';
-}
-
-function saveSong(){
-  if(!songSections.length){alert('Write some sections first!');return;}
-  const songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
-  const song={
-    id:Date.now(),
-    title:songTitle,
-    sections:songSections,
-    date:new Date().toLocaleDateString()
-  };
-  songs.unshift(song);
-  localStorage.setItem('fretboard_songs',JSON.stringify(songs));
-  pushToCloud();
-  alert(`"${songTitle}" saved to your library!`);
-}
-
-function exportSong(){
-  if(!songSections.length){alert('Write some sections first!');return;}
-  doExport(songTitle,songSections);
-}
-
-function doExport(title,sections){
-  let out=`${title}\n${'='.repeat(title.length)}\n\n`;
-  sections.forEach(s=>{
-    out+=`[${s.label}]\nChords: ${s.chords}\n`;
-    if(s.lyrics)out+=`\n${s.lyrics}\n`;
-    out+='\n';
-  });
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
-  a.download=`${title.replace(/\s+/g,'_')}.txt`;
-  a.click();
-}
-
-// ─── Library ─────────────────────────────────────────────────────
-function renderLibrary(){
-  const songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
-  const grid=document.getElementById('libraryGrid');
-  if(!songs.length){
-    grid.innerHTML=`<div class="library-empty"><div class="big">🎵</div><div>No songs saved yet.<br>Write something and hit Save.</div></div>`;
-    return;
-  }
-  grid.innerHTML=songs.map(s=>`
-    <div class="library-card">
-      <div class="library-card-title">${s.title}</div>
-      <div class="library-card-date">${s.date}</div>
-      <div class="library-card-sections">${s.sections.map(sec=>sec.label).join(' · ')}</div>
-      <div class="library-card-actions">
-        <button class="lib-btn" onclick="viewSong(${s.id})">View</button>
-        <button class="lib-btn" onclick="loadSong(${s.id})">Load</button>
-        <button class="lib-btn" onclick="exportSavedSongById(${s.id})">⬇ TXT</button>
-        <button class="lib-btn del" onclick="deleteSong(${s.id})">Delete</button>
-      </div>
-    </div>`).join('');
-}
-
-function getSongById(id){
-  const songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
-  return songs.find(s=>s.id===id);
-}
-
-function viewSong(id){
-  const song=getSongById(id);
-  if(!song)return;
-  viewingSong=song;
-  document.getElementById('svTitle').textContent=song.title;
-  document.getElementById('svBody').innerHTML=song.sections.map(s=>`
-    <div class="section-block" style="margin-bottom:10px">
-      <div class="section-block-head"><span class="section-block-label">${s.label}</span></div>
-      <div class="section-block-chords">${s.chords}</div>
-      <div class="section-block-lyrics">${s.lyrics||'<span class="no-lyrics">No lyrics</span>'}</div>
-    </div>`).join('');
-  document.getElementById('songViewModal').classList.add('open');
-}
-
-function closeSongView(){document.getElementById('songViewModal').classList.remove('open');viewingSong=null;}
-
-function exportSavedSong(){if(viewingSong)doExport(viewingSong.title,viewingSong.sections);}
-function exportSavedSongById(id){const s=getSongById(id);if(s)doExport(s.title,s.sections);}
-
-function loadSong(id){
-  const song=getSongById(id);
-  if(!song)return;
-  songTitle=song.title;
-  songSections=[...song.sections];
-  chatHistory=[];
-  persistSession();
-  document.getElementById('songTitleDisplay').textContent=songTitle;
-  renderSheet();
-  switchView('write');
-  addMsg('ai',`Loaded <strong>${songTitle}</strong> into the editor. Let's keep working on it!`);
-}
-
-function deleteSong(id){
-  if(!confirm('Delete this song?'))return;
-  let songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
-  songs=songs.filter(s=>s.id!==id);
-  localStorage.setItem('fretboard_songs',JSON.stringify(songs));
-  pushToCloud();
-  renderLibrary();
-}
-
-// ─── Cover Lookup ─────────────────────────────────────────────────
-async function lookupCover(){
-  const inp=document.getElementById('coverInput');
-  const query=inp.value.trim();
-  if(!query)return;
-  if(!apiKey){openApiModal();return;}
-
-  const btn=document.getElementById('lookupBtn');
-  btn.disabled=true;btn.textContent='Looking up...';
-
-  const result=document.getElementById('coverResult');
-  result.innerHTML=`<div class="song-empty" style="height:150px"><div class="typing" style="justify-content:center"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
-
-  const sys=`You are a guitar chord and tab expert. Given a song name (and optionally artist), return everything needed to play it on guitar.
-
-Always respond with ONLY a JSON block like this:
+OR for a chord-type section:
 \`\`\`json
 {
-  "title": "Blackbird",
-  "artist": "The Beatles",
-  "key": "G major",
-  "capo": "No capo",
-  "tuning": "Standard (EADGBe)",
-  "sections": [
-    {"label": "Intro / Main theme", "chords": "G Am G/B G"},
-    {"label": "Verse", "chords": "G Am7 G/B C"},
-    {"label": "Chorus", "chords": "F C/E Dm C Bb C"}
-  ],
-  "chords": ["G","Am","C","F","Dm"],
-  "tabs": [
-    {
-      "label": "Intro Riff",
-      "tab": "e|--3--3--3--3--3--3--3--3--|\nB|--3--3--3--3--1--1--1--1--|\nG|--0--0--0--0--2--2--0--0--|\nD|--0--0--2--0--2--2--0--0--|\nA|--2--2--3--2--0--0--2--2--|\nE|--3--3--3--3--3--3--3--3--|"
-    },
-    {
-      "label": "Picking Pattern",
-      "tab": "e|------------3-|\nB|----------3---|\nG|--------0-----|\nD|------0-------|\nA|----2---------|\nE|--3-----------|"
-    }
-  ],
-  "notes": "Fingerpicking pattern: p-i-m-a on each chord. The song uses a lot of moving bass lines.",
-  "difficulty": "Intermediate"
+  "section": {
+    "label": "Verse 1",
+    "stype": "chords",
+    "tab": null,
+    "chords": "Am - F - C - G (4x)",
+    "pattern": "Strum: D DU UDU",
+    "lyrics": null
+  },
+  "chords": ["Am","F","C","G"],
+  "title": null
 }
 \`\`\`
 
 Rules:
-- sections: main distinct parts of the song with chord names
-- chords: unique chord names for diagram display (common ones only)
-- tabs: 1-3 tab sections — include the most iconic/useful parts: intro riff, main picking pattern, signature lick, or solo if notable. Use standard 6-string tab format with string names (e B G D A E). Use \\n for line breaks within tab strings.
-- notes: brief tips on technique, strumming, key info
-- Be musically accurate. If a song has a famous intro riff or solo, include it.`;
+- section.label: Intro | Verse 1 | Verse 2 | Pre-Chorus | Chorus | Bridge | Solo | Outro
+- stype: "tab" or "chords" — YOU decide which fits
+- For tab: write real guitar tab using 6 strings (e B G D A E), use \\n between strings
+- For chords: include a strumming/picking pattern hint in "pattern"
+- lyrics: include ONLY if user asked for lyrics; use \\n for line breaks
+- chords array: unique chord names for diagram display
+- title: suggest only if you have a great one
+- Prose before JSON: 1-3 warm sentences
+- The user will approve or reject the section — you're showing a preview
+
+Current song: title="${songTitle}", sections=${JSON.stringify(sections)}`;
+
+  const msgId='m'+Date.now();
+  try{
+    const full=await callClaude(sys,chatHist);
+    chatHist.push({role:'assistant',content:full});
+    const parsed=parseJSON(full);
+    const prose=full.replace(/```json[\s\S]*?```/,'').trim();
+    const chords=parsed?.chords||[];
+
+    if(parsed?.title&&parsed.title!=='Untitled Song'&&parsed.title!==null){
+      songTitle=parsed.title;
+      document.getElementById('stitle').textContent=songTitle;
+    }
+
+    let commitCardHTML='';
+    if(parsed?.section&&parsed.section.label&&parsed.section.stype){
+      pendingSections[msgId]=parsed.section;
+      retryRequests[msgId]=txt;
+      commitCardHTML=buildCommitCard(parsed.section,msgId);
+    }
+
+    if(chords.length)showDiags(chords);
+    removeTyping();
+    addMsg('ai',prose.replace(/\n/g,'<br>'),chords,commitCardHTML);
+    persist();
+  }catch(err){
+    removeTyping();chatHist.pop();
+    addMsg('ai',err.message==='NO_KEY'?'Tap <strong>Settings</strong> to add your API key.':`Error: ${err.message}`);
+  }
+  isLoading=false;document.getElementById('sbtn').disabled=false;
+}
+
+function sq(t){document.getElementById('ci').value=t;send();}
+function hk(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+
+// ── Song management ───────────────────────────────────────────────
+function editTitle(){
+  const el=document.getElementById('stitle'),cur=songTitle;
+  el.style.display='none';
+  const inp=document.createElement('input');
+  inp.value=cur;inp.style.cssText='background:var(--s2);border:1px solid var(--gold);border-radius:2px;color:var(--gold);font-family:var(--fd);font-size:16px;letter-spacing:1px;padding:2px 6px;outline:none;width:160px;';
+  el.parentNode.insertBefore(inp,el);inp.focus();inp.select();
+  function commit(){const v=inp.value.trim()||cur;songTitle=v;el.textContent=v;el.style.display='';inp.remove();persist();}
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')commit();if(e.key==='Escape'){inp.value=cur;commit();}});
+}
+
+function newSong(){
+  if(sections.length&&!confirm('Start a new song? Unsaved work will be lost.'))return;
+  songTitle='Untitled Song';sections=[];chatHist=[];persist();
+  document.getElementById('stitle').textContent=songTitle;renderSheet();
+  document.getElementById('msgs').innerHTML=`<div class="msg ai"><div class="av">🎸</div><div class="bub">Fresh start! What mood or style are we going for?</div></div>`;
+  document.getElementById('qarea').style.display='flex';
+  if(window.innerWidth<700)showWPane('chat');
+}
+
+function saveSong(){
+  if(!sections.length){alert('Write and approve some sections first!');return;}
+  const songs=JSON.parse(localStorage.getItem('fa_songs')||'[]');
+  songs.unshift({id:Date.now(),title:songTitle,sections,date:new Date().toLocaleDateString()});
+  localStorage.setItem('fa_songs',JSON.stringify(songs));
+  pushCloud();alert(`"${songTitle}" saved!`);
+}
+
+function exportSong(){if(!sections.length){alert('Nothing to export yet!');return;}doExport(songTitle,sections);}
+
+function doExport(title,secs){
+  let out=`${title}\n${'='.repeat(title.length)}\n\n`;
+  secs.forEach(s=>{
+    out+=`[${s.label}]${s.stype==='tab'?' (Tab)':''}\n`;
+    if(s.stype==='tab'&&s.tab)out+=s.tab+'\n';
+    else if(s.chords)out+=`Chords: ${s.chords}\n${s.pattern?s.pattern+'\n':''}`;
+    if(s.lyrics)out+=`\n${s.lyrics}\n`;
+    out+='\n';
+  });
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));a.download=`${title.replace(/\s+/g,'_')}.txt`;a.click();
+}
+
+// ── Library ───────────────────────────────────────────────────────
+function renderLib(){
+  const songs=JSON.parse(localStorage.getItem('fa_songs')||'[]'),g=document.getElementById('lgrid');
+  if(!songs.length){g.innerHTML=`<div class="lempty"><div class="big">🎵</div><div>No songs saved yet.</div></div>`;return;}
+  g.innerHTML=songs.map(s=>`<div class="lcard"><div class="lcard-title">${s.title}</div><div class="lcard-date">${s.date}</div><div class="lcard-secs">${s.sections.map(x=>x.label).join(' · ')}</div><div class="lcard-acts"><button class="lbtn2" onclick="viewSong(${s.id})">View</button><button class="lbtn2" onclick="loadSong(${s.id})">Load</button><button class="lbtn2" onclick="expSong(${s.id})">⬇ TXT</button><button class="lbtn2 del" onclick="delSong(${s.id})">Delete</button></div></div>`).join('');
+}
+
+function getSong(id){return JSON.parse(localStorage.getItem('fa_songs')||'[]').find(s=>s.id===id);}
+
+function viewSong(id){
+  const song=getSong(id);if(!song)return;viewingSong=song;
+  document.getElementById('svtitle').textContent=song.title;
+  document.getElementById('svbody').innerHTML=song.sections.map(s=>{
+    if(s.stype==='tab')return`<div class="sblock" style="margin-bottom:10px"><div class="sblock-head"><span class="sblock-label">${s.label}</span><span class="sblock-type">Tab</span></div><div class="sblock-tab">${s.tab}</div>${s.lyrics?`<div class="sblock-lyrics">${s.lyrics}</div>`:''}</div>`;
+    return`<div class="sblock" style="margin-bottom:10px"><div class="sblock-head"><span class="sblock-label">${s.label}</span><span class="sblock-type">Chords</span></div><div class="sblock-chords">${s.chords}</div>${s.pattern?`<div class="sblock-pattern">${s.pattern}</div>`:''}<div class="sblock-lyrics">${s.lyrics||'<span class="nolyr">No lyrics</span>'}</div></div>`;
+  }).join('');
+  document.getElementById('svmodal').classList.add('open');
+}
+function closeSV(){document.getElementById('svmodal').classList.remove('open');viewingSong=null;}
+function exportSavedSong(){if(viewingSong)doExport(viewingSong.title,viewingSong.sections);}
+function expSong(id){const s=getSong(id);if(s)doExport(s.title,s.sections);}
+
+function loadSong(id){
+  const song=getSong(id);if(!song)return;
+  songTitle=song.title;sections=[...song.sections];chatHist=[];persist();
+  document.getElementById('stitle').textContent=songTitle;renderSheet();sv('write');
+  addMsg('ai',`Loaded <strong>${songTitle}</strong>. Let's keep working on it!`);
+}
+
+function delSong(id){
+  if(!confirm('Delete this song?'))return;
+  let songs=JSON.parse(localStorage.getItem('fa_songs')||'[]');
+  songs=songs.filter(s=>s.id!==id);localStorage.setItem('fa_songs',JSON.stringify(songs));pushCloud();renderLib();
+}
+
+// ── Cover Lookup ──────────────────────────────────────────────────
+function coverCardHTML(c){
+  return `<div class="ccard">
+    <div class="ccard-title">${c.title}</div>
+    <div class="ccard-artist">${c.artist||''} · ${c.key||''} · ${c.capo||'No capo'} · ${c.tuning||'Standard'} · ${c.difficulty||''}</div>
+    ${(c.sections||[]).map(s=>`<div class="ccard-sec"><h4>${s.label}</h4><div class="cchords">${s.chords}</div></div>`).join('')}
+    ${c.notes?`<div class="cnotes">${c.notes}</div>`:''}
+    ${(c.tabs&&c.tabs.length)?`<div class="tab-block"><div class="tab-block-title">Tablature</div>${c.tabs.map(t=>`<div class="tab-lbl">${t.label}</div><pre class="tab-pre">${t.tab}</pre>`).join('')}</div>`:''}
+    <div class="diagbar" style="padding:10px 0;background:transparent;border-top:1px solid var(--border);margin-top:12px">
+      <div class="diagbar-title">Chord Diagrams</div>
+      <div class="diagrow" style="margin-top:8px">${(c.chords||[]).filter(ch=>SHP[ch]).map(ch=>`<div class="ditem"><div class="dname">${ch}</div>${drawDiag(ch)}</div>`).join('')}</div>
+    </div>
+    <button class="savecov" onclick="saveCover()">💾 Save to My Covers</button>
+  </div>`;
+}
+
+async function lookupCover(){
+  const inp=document.getElementById('cinput'),q=inp.value.trim();
+  if(!q)return;if(!apiKey){openSettings();return;}
+  const btn=document.getElementById('lbtn');btn.disabled=true;btn.textContent='Looking up...';
+  const res=document.getElementById('cresult');
+  res.innerHTML=`<div class="sempty" style="padding:40px"><div class="typing" style="justify-content:center"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+  if(window.innerWidth<700)showCPane('result');
+
+  const sys=`Guitar chord and tab expert. Return ONLY a JSON block:
+\`\`\`json
+{"title":"","artist":"","key":"","capo":"No capo","tuning":"Standard (EADGBe)","sections":[{"label":"Verse","chords":"G Am C D"}],"chords":["G","Am","C","D"],"tabs":[{"label":"Intro Riff","tab":"e|------|\\nB|------|\\nG|------|\\nD|------|\\nA|------|\\nE|------|"}],"notes":"","difficulty":""}
+\`\`\`
+Be musically accurate. Include iconic riffs or patterns.`;
 
   try{
-    const full=await callClaude(sys,[{role:'user',content:`Give me the guitar chords for: ${query}`}],800);
-    const parsed=parseBlock(full);
-
-    if(!parsed){
-      result.innerHTML=`<div style="padding:20px;color:var(--muted)">Couldn't parse chord data. Try again.</div>`;
-    } else {
-      currentCoverData=parsed;
-      result.innerHTML=`
-        <div class="cover-result-card">
-          <div class="cover-result-title">${parsed.title}</div>
-          <div class="cover-result-artist">${parsed.artist||''} · Key: ${parsed.key||'?'} · ${parsed.capo||'No capo'} · Tuning: ${parsed.tuning||'Standard'} · ${parsed.difficulty||''}</div>
-          ${(parsed.sections||[]).map(s=>`
-            <div class="cover-result-section">
-              <h4>${s.label}</h4>
-              <div class="cover-chords">${s.chords}</div>
-            </div>`).join('')}
-          ${parsed.notes?`<div class="cover-notes">${parsed.notes}</div>`:''}
-          ${(parsed.tabs&&parsed.tabs.length)?`
-            <div class="tab-block">
-              <div class="tab-block-title">Tablature</div>
-              ${parsed.tabs.map(t=>`
-                <div class="tab-block-label">${t.label}</div>
-                <pre class="tab-pre">${t.tab}</pre>
-              `).join('')}
-            </div>`:''}
-          <div class="diag-bar" style="padding:10px 0;background:transparent;border-top:1px solid var(--border);margin-top:12px">
-            <div class="diag-bar-title">Chord Diagrams</div>
-            <div class="diag-row" style="margin-top:8px">
-              ${(parsed.chords||[]).filter(c=>SHAPES[c]).map(c=>`
-                <div class="diag-item">
-                  <div class="diag-name">${c}</div>
-                  ${drawDiagram(c)}
-                </div>`).join('')}
-            </div>
-          </div>
-          <button class="save-cover-btn" onclick="saveCover()">💾 Save to My Covers</button>
-        </div>`;
-    }
+    const full=await callClaude(sys,[{role:'user',content:`Guitar chords for: ${q}`}],900);
+    const parsed=parseJSON(full);
+    if(!parsed)res.innerHTML=`<div style="padding:20px;color:var(--muted)">Couldn't parse. Try again.</div>`;
+    else{coverData=parsed;res.innerHTML=coverCardHTML(parsed);}
   }catch(err){
-    if(err.message==='NO_KEY'){
-      result.innerHTML=`<div style="padding:20px;color:var(--muted)">Please set your API key first.</div>`;
-      openApiModal();
-    } else {
-      result.innerHTML=`<div style="padding:20px;color:var(--muted)">Error: ${err.message}</div>`;
-    }
+    if(err.message==='NO_KEY'){res.innerHTML=`<div style="padding:20px;color:var(--muted)">Set your API key first.</div>`;openSettings();}
+    else res.innerHTML=`<div style="padding:20px;color:var(--muted)">Error: ${err.message}</div>`;
   }
-
-  btn.disabled=false;btn.textContent='Look Up Chords';
+  btn.disabled=false;btn.textContent='Look Up';
 }
 
 function saveCover(){
-  if(!currentCoverData)return;
-  const covers=JSON.parse(localStorage.getItem('fretboard_covers')||'[]');
-  if(covers.find(c=>c.title===currentCoverData.title&&c.artist===currentCoverData.artist)){
-    alert('Already saved!');return;
-  }
-  covers.unshift({...currentCoverData,savedAt:Date.now()});
-  localStorage.setItem('fretboard_covers',JSON.stringify(covers));
-  pushToCloud();
-  renderCovers();
-  alert(`"${currentCoverData.title}" saved to your cover list!`);
+  if(!coverData)return;
+  const covers=JSON.parse(localStorage.getItem('fa_covers')||'[]');
+  if(covers.find(c=>c.title===coverData.title&&c.artist===coverData.artist)){alert('Already saved!');return;}
+  covers.unshift({...coverData,savedAt:Date.now()});
+  localStorage.setItem('fa_covers',JSON.stringify(covers));pushCloud();renderCovers();
+  alert(`"${coverData.title}" saved!`);
 }
 
 function renderCovers(){
-  const covers=JSON.parse(localStorage.getItem('fretboard_covers')||'[]');
-  const el=document.getElementById('coverListScroll');
-  if(!covers.length){
-    el.innerHTML=`<div class="cover-list-empty">No covers saved yet.<br>Look up a song and save it.</div>`;
-    return;
-  }
-  el.innerHTML=covers.map((c,i)=>`
-    <div class="cover-item" onclick="loadCoverIntoResult(${i})">
-      <div class="cover-item-title">${c.title}</div>
-      <div class="cover-item-artist">${c.artist||''}</div>
-      <div class="cover-item-key">${c.key||''} · ${c.difficulty||''}</div>
-    </div>`).join('');
+  const covers=JSON.parse(localStorage.getItem('fa_covers')||'[]'),el=document.getElementById('clscroll');
+  if(!covers.length){el.innerHTML=`<div class="clempty">No covers saved yet.<br>Look up a song and save it.</div>`;return;}
+  el.innerHTML=covers.map((c,i)=>`<div class="citem" onclick="loadCover(${i})"><div class="citem-title">${c.title}</div><div class="citem-artist">${c.artist||''}</div><div class="citem-key">${c.key||''} · ${c.difficulty||''}</div></div>`).join('');
 }
 
-function loadCoverIntoResult(idx){
-  const covers=JSON.parse(localStorage.getItem('fretboard_covers')||'[]');
-  const c=covers[idx];
-  if(!c)return;
-  currentCoverData=c;
-  document.getElementById('coverResult').innerHTML=`
-    <div class="cover-result-card">
-      <div class="cover-result-title">${c.title}</div>
-      <div class="cover-result-artist">${c.artist||''} · Key: ${c.key||'?'} · ${c.capo||'No capo'} · Tuning: ${c.tuning||'Standard'} · ${c.difficulty||''}</div>
-      ${(c.sections||[]).map(s=>`
-        <div class="cover-result-section">
-          <h4>${s.label}</h4>
-          <div class="cover-chords">${s.chords}</div>
-        </div>`).join('')}
-      ${c.notes?`<div class="cover-notes">${c.notes}</div>`:''}
-      ${(c.tabs&&c.tabs.length)?`
-        <div class="tab-block">
-          <div class="tab-block-title">Tablature</div>
-          ${c.tabs.map(t=>`
-            <div class="tab-block-label">${t.label}</div>
-            <pre class="tab-pre">${t.tab}</pre>
-          `).join('')}
-        </div>`:''}
-      <div class="diag-bar" style="padding:10px 0;background:transparent;border-top:1px solid var(--border);margin-top:12px">
-        <div class="diag-bar-title">Chord Diagrams</div>
-        <div class="diag-row" style="margin-top:8px">
-          ${(c.chords||[]).filter(ch=>SHAPES[ch]).map(ch=>`
-            <div class="diag-item">
-              <div class="diag-name">${ch}</div>
-              ${drawDiagram(ch)}
-            </div>`).join('')}
-        </div>
-      </div>
-    </div>`;
+function loadCover(idx){
+  const covers=JSON.parse(localStorage.getItem('fa_covers')||'[]'),c=covers[idx];if(!c)return;
+  coverData=c;document.getElementById('cresult').innerHTML=coverCardHTML(c);
+  if(window.innerWidth<700)showCPane('result');
 }
 
 renderCovers();
 
-// ─── Restore session on load ──────────────────────────────────────
-(function restoreSession(){
-  if(songTitle!=='Untitled Song'){
-    document.getElementById('songTitleDisplay').textContent=songTitle;
+// ── Session restore ───────────────────────────────────────────────
+(function(){
+  if(songTitle!=='Untitled Song')document.getElementById('stitle').textContent=songTitle;
+  if(sections.length)renderSheet();
+  if(chatHist.length){
+    document.getElementById('msgs').innerHTML='';document.getElementById('qarea').style.display='none';
+    chatHist.forEach(m=>{
+      if(m.role==='user')addMsg('user',m.content.replace(/\n/g,'<br>'));
+      else{const p=parseJSON(m.content),prose=m.content.replace(/```json[\s\S]*?```/,'').trim();addMsg('ai',prose.replace(/\n/g,'<br>'),p?.chords||[]);}
+    });
+    for(let i=chatHist.length-1;i>=0;i--){if(chatHist[i].role==='assistant'){const p=parseJSON(chatHist[i].content);if(p?.chords?.length)showDiags(p.chords);break;}}
   }
-  if(songSections.length) renderSheet();
-
-  if(chatHistory.length){
-    document.getElementById('chatMessages').innerHTML='';
-    document.getElementById('quickArea').style.display='none';
-    for(let i=0;i<chatHistory.length;i++){
-      const m=chatHistory[i];
-      if(m.role==='user'){
-        addMsg('user',m.content.replace(/\n/g,'<br>'));
-      } else {
-        const parsed=parseBlock(m.content);
-        const prose=m.content.replace(/```json[\s\S]*?```/,'').trim();
-        const chords=parsed?.chords||[];
-        addMsg('ai',prose.replace(/\n/g,'<br>'),chords,parsed?.section?.label||null);
-      }
-    }
-    // Restore chord diagrams from last AI message
-    for(let i=chatHistory.length-1;i>=0;i--){
-      if(chatHistory[i].role==='assistant'){
-        const parsed=parseBlock(chatHistory[i].content);
-        if(parsed?.chords?.length) showDiagrams(parsed.chords);
-        break;
-      }
-    }
-  }
-  // Pull from cloud if JSONBin is configured
-  if(jsonbinKey&&jsonbinBin) pullFromCloud();
+  if(jbKey&&jbBin)pullCloud();
 })();
-
 </script>
 </body>
 </html>
