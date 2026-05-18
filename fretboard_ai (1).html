@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fretboard AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;700&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg:#080a0e;
+  --s1:#0f1117;
+  --s2:#161b24;
+  --s3:#1e2430;
+  --border:#252d3d;
+  --border2:#2e3848;
+  --gold:#d4a843;
+  --gold2:#f0c060;
+  --rust:#b8472a;
+  --blue:#3d6e8f;
+  --green:#3a7d5a;
+  --text:#ddd8cc;
+  --muted:#556070;
+  --muted2:#3a4455;
+  --font-display:'Bebas Neue',sans-serif;
+  --font-body:'Crimson Pro',serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+
+html,body{height:100%;overflow:hidden}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:15px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── HEADER ── */
+.header{
+  display:flex;align-items:center;gap:16px;
+  padding:10px 20px;
+  background:var(--s1);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  position:relative;
+}
+
+.logo{
+  font-family:var(--font-display);
+  font-size:28px;
+  color:var(--gold);
+  letter-spacing:2px;
+  line-height:1;
+}
+
+.logo span{color:var(--rust);}
+
+.tagline{
+  font-family:var(--font-mono);
+  font-size:9px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.header-tabs{
+  display:flex;gap:4px;margin-left:auto;
+}
+
+.tab-btn{
+  font-family:var(--font-mono);
+  font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  padding:6px 14px;border-radius:2px;cursor:pointer;
+  border:1px solid var(--border);
+  background:transparent;color:var(--muted);
+  transition:all 0.15s;
+}
+.tab-btn.active{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:700;}
+.tab-btn:hover:not(.active){border-color:var(--gold);color:var(--gold);}
+
+.api-key-btn{
+  font-family:var(--font-mono);font-size:10px;
+  padding:6px 12px;border-radius:2px;cursor:pointer;
+  border:1px solid var(--border2);background:transparent;
+  color:var(--muted);transition:all 0.15s;
+  display:flex;align-items:center;gap:5px;
+  margin-left:8px;
+}
+.api-key-btn:hover{border-color:var(--gold);color:var(--gold);}
+.api-key-btn .dot{width:6px;height:6px;border-radius:50%;background:var(--rust);}
+.api-key-btn .dot.ok{background:var(--green);}
+
+/* ── VIEWS ── */
+.view{display:none;flex:1;overflow:hidden;}
+.view.active{display:flex;}
+
+/* ── WRITE VIEW ── */
+#writeView{flex-direction:row;}
+
+/* Chat panel */
+.chat-panel{
+  display:flex;flex-direction:column;
+  flex:1;border-right:1px solid var(--border);
+  overflow:hidden;min-width:0;
+}
+
+.chat-messages{
+  flex:1;overflow-y:auto;padding:18px;
+  display:flex;flex-direction:column;gap:12px;
+  scroll-behavior:smooth;
+}
+.chat-messages::-webkit-scrollbar{width:3px;}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+.msg{display:flex;gap:10px;align-items:flex-start;animation:slideUp 0.25s ease;}
+.msg.user{flex-direction:row-reverse;}
+
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.avatar{
+  width:28px;height:28px;border-radius:3px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  background:var(--s2);border:1px solid var(--border);
+}
+.msg.user .avatar{background:var(--rust);border-color:var(--rust);}
+
+.bubble{
+  max-width:82%;padding:10px 14px;border-radius:3px;
+  font-size:14px;line-height:1.65;
+  background:var(--s2);border:1px solid var(--border);
+}
+.msg.user .bubble{background:#1a100a;border-color:#2e1a10;}
+
+.sec-tag{
+  display:inline-block;font-family:var(--font-mono);
+  font-size:8px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--rust);border:1px solid var(--rust);
+  padding:1px 6px;border-radius:1px;margin-bottom:6px;
+}
+
+.chord-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.pill{
+  font-family:var(--font-mono);font-size:11px;font-weight:700;
+  padding:3px 9px;border-radius:2px;cursor:pointer;
+  border:1px solid var(--gold);color:var(--gold);
+  background:transparent;transition:all 0.12s;
+}
+.pill:hover{background:var(--gold);color:var(--bg);}
+
+/* Quick prompts */
+.quick-area{
+  padding:8px 14px;
+  border-top:1px solid var(--border);
+  background:var(--s1);
+  display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;
+}
+.qp{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:1px;
+  padding:4px 10px;border-radius:2px;cursor:pointer;
+  border:1px solid var(--border2);color:var(--muted);
+  background:transparent;transition:all 0.12s;white-space:nowrap;
+}
+.qp:hover{border-color:var(--gold);color:var(--gold);}
+
+/* Input area */
+.input-area{
+  padding:12px 14px;border-top:1px solid var(--border);
+  background:var(--s1);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;
+}
+textarea.chat-input{
+  flex:1;background:var(--s2);border:1px solid var(--border);
+  border-radius:3px;color:var(--text);
+  font-family:var(--font-body);font-size:14px;
+  padding:9px 12px;resize:none;outline:none;
+  min-height:40px;max-height:110px;line-height:1.5;
+  transition:border-color 0.15s;
+}
+textarea.chat-input:focus{border-color:var(--gold);}
+textarea.chat-input::placeholder{color:var(--muted);}
+
+.send{
+  background:var(--gold);color:var(--bg);border:none;
+  border-radius:3px;width:40px;height:40px;flex-shrink:0;
+  cursor:pointer;font-size:16px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.12s;
+}
+.send:hover:not(:disabled){background:var(--gold2);}
+.send:disabled{opacity:0.35;cursor:not-allowed;}
+
+/* Song sheet panel */
+.song-panel{
+  width:320px;flex-shrink:0;
+  display:flex;flex-direction:column;
+  background:var(--s1);overflow:hidden;
+}
+
+.song-panel-head{
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.song-panel-head h2{
+  font-family:var(--font-display);
+  font-size:16px;color:var(--gold);letter-spacing:1px;
+}
+
+.song-actions{display:flex;gap:6px;}
+.icon-btn{
+  background:transparent;border:1px solid var(--border2);
+  color:var(--muted);font-family:var(--font-mono);font-size:9px;
+  letter-spacing:1px;text-transform:uppercase;
+  padding:4px 9px;border-radius:2px;cursor:pointer;transition:all 0.12s;
+}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold);}
+.icon-btn.save{border-color:var(--green);color:var(--green);}
+.icon-btn.save:hover{background:var(--green);color:#fff;}
+
+.song-scroll{flex:1;overflow-y:auto;padding:14px;}
+.song-scroll::-webkit-scrollbar{width:3px;}
+.song-scroll::-webkit-scrollbar-thumb{background:var(--border2);}
+
+.song-empty{
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;color:var(--muted);
+  font-size:13px;text-align:center;line-height:1.8;
+  height:100%;
+}
+.song-empty .big{font-size:32px;opacity:0.3;}
+
+.section-block{
+  border:1px solid var(--border);border-radius:3px;
+  margin-bottom:10px;overflow:hidden;animation:slideUp 0.3s ease;
+}
+.section-block-head{
+  background:var(--s2);padding:5px 10px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.section-block-label{
+  font-family:var(--font-mono);font-size:9px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--rust);
+}
+.section-block-chords{
+  padding:7px 10px;
+  font-family:var(--font-mono);font-size:12px;
+  color:var(--gold);font-weight:700;letter-spacing:1px;
+  border-bottom:1px solid var(--border);
+}
+.section-block-lyrics{
+  padding:8px 10px;font-size:13px;
+  color:var(--text);line-height:1.75;white-space:pre-wrap;font-style:italic;
+}
+.no-lyrics{color:var(--muted);font-style:normal;font-size:11px;font-family:var(--font-mono);}
+
+/* Tablature */
+.tab-block{
+  margin-top:14px;border-top:1px solid var(--border);padding-top:12px;
+}
+.tab-block-title{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--rust);margin-bottom:8px;
+}
+.tab-block-label{
+  font-family:var(--font-mono);font-size:9px;color:var(--muted);
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;
+}
+.tab-pre{
+  font-family:var(--font-mono);font-size:11px;
+  color:#a8c4a8;line-height:1.6;
+  background:#0d1a0d;border:1px solid #1e3a1e;
+  border-radius:2px;padding:10px 12px;
+  overflow-x:auto;white-space:pre;
+  margin-bottom:10px;
+}
+.tab-pre::-webkit-scrollbar{height:3px;}
+.tab-pre::-webkit-scrollbar-thumb{background:var(--border2);}
+
+/* Chord diagrams */
+.diag-bar{
+  padding:10px 16px;border-top:1px solid var(--border);
+  background:var(--s2);flex-shrink:0;
+}
+.diag-bar-title{
+  font-family:var(--font-mono);font-size:8px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;
+}
+.diag-row{display:flex;gap:10px;flex-wrap:wrap;}
+.diag-item{text-align:center;}
+.diag-name{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--gold);margin-bottom:3px;}
+
+/* ── COVER VIEW ── */
+#coverView{flex-direction:row;}
+
+.cover-lookup{
+  flex:1;display:flex;flex-direction:column;
+  border-right:1px solid var(--border);overflow:hidden;
+}
+
+.cover-lookup-top{
+  padding:20px;border-bottom:1px solid var(--border);
+  background:var(--s1);flex-shrink:0;
+}
+.cover-lookup-top h3{
+  font-family:var(--font-display);font-size:22px;
+  color:var(--gold);letter-spacing:2px;margin-bottom:12px;
+}
+
+.cover-search-row{display:flex;gap:8px;}
+.cover-input{
+  flex:1;background:var(--s2);border:1px solid var(--border);
+  border-radius:3px;color:var(--text);
+  font-family:var(--font-body);font-size:15px;
+  padding:10px 14px;outline:none;transition:border-color 0.15s;
+}
+.cover-input:focus{border-color:var(--gold);}
+.cover-input::placeholder{color:var(--muted);}
+
+.lookup-btn{
+  background:var(--gold);color:var(--bg);border:none;
+  border-radius:3px;padding:0 20px;
+  font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;
+  cursor:pointer;transition:all 0.12s;white-space:nowrap;
+}
+.lookup-btn:hover:not(:disabled){background:var(--gold2);}
+.lookup-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+.cover-result{
+  flex:1;overflow-y:auto;padding:20px;
+}
+.cover-result::-webkit-scrollbar{width:3px;}
+.cover-result::-webkit-scrollbar-thumb{background:var(--border2);}
+
+.cover-result-card{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:3px;padding:16px;animation:slideUp 0.25s ease;
+}
+.cover-result-title{
+  font-family:var(--font-display);font-size:20px;
+  color:var(--gold);letter-spacing:1px;margin-bottom:4px;
+}
+.cover-result-artist{
+  font-family:var(--font-mono);font-size:10px;
+  color:var(--muted);letter-spacing:1px;margin-bottom:14px;
+}
+.cover-result-section{margin-bottom:14px;}
+.cover-result-section h4{
+  font-family:var(--font-mono);font-size:9px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--rust);margin-bottom:6px;
+}
+.cover-chords{
+  font-family:var(--font-mono);font-size:13px;
+  color:var(--gold);font-weight:700;line-height:2;
+}
+.cover-notes{
+  font-size:13px;color:var(--text);line-height:1.7;margin-top:8px;
+}
+.save-cover-btn{
+  margin-top:12px;
+  background:transparent;border:1px solid var(--green);color:var(--green);
+  font-family:var(--font-mono);font-size:10px;letter-spacing:1px;
+  padding:7px 16px;border-radius:2px;cursor:pointer;transition:all 0.12s;
+}
+.save-cover-btn:hover{background:var(--green);color:#fff;}
+
+/* Cover list */
+.cover-list-panel{
+  width:280px;flex-shrink:0;
+  background:var(--s1);display:flex;flex-direction:column;overflow:hidden;
+}
+.cover-list-head{
+  padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.cover-list-head h3{
+  font-family:var(--font-display);font-size:16px;
+  color:var(--gold);letter-spacing:1px;
+}
+.cover-list-scroll{flex:1;overflow-y:auto;padding:10px;}
+.cover-list-scroll::-webkit-scrollbar{width:3px;}
+.cover-list-scroll::-webkit-scrollbar-thumb{background:var(--border2);}
+
+.cover-item{
+  padding:10px 12px;border:1px solid var(--border);border-radius:3px;
+  margin-bottom:8px;cursor:pointer;transition:all 0.12s;
+  animation:slideUp 0.25s ease;
+}
+.cover-item:hover{border-color:var(--gold);}
+.cover-item-title{
+  font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text);
+}
+.cover-item-artist{
+  font-size:11px;color:var(--muted);margin-top:2px;
+}
+.cover-item-key{
+  font-family:var(--font-mono);font-size:9px;color:var(--gold);margin-top:4px;
+}
+.cover-list-empty{
+  color:var(--muted);font-size:12px;text-align:center;
+  padding:30px 16px;line-height:1.8;font-family:var(--font-mono);
+}
+
+/* ── LIBRARY VIEW ── */
+#libraryView{flex-direction:column;}
+
+.library-head{
+  padding:16px 24px;border-bottom:1px solid var(--border);
+  background:var(--s1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.library-head h2{font-family:var(--font-display);font-size:24px;color:var(--gold);letter-spacing:2px;}
+
+.library-grid{
+  flex:1;overflow-y:auto;padding:20px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;
+  align-content:start;
+}
+.library-grid::-webkit-scrollbar{width:4px;}
+.library-grid::-webkit-scrollbar-thumb{background:var(--border2);}
+
+.library-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:3px;
+  padding:14px;cursor:pointer;transition:all 0.15s;animation:slideUp 0.3s ease;
+}
+.library-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+.library-card-title{
+  font-family:var(--font-display);font-size:18px;
+  color:var(--gold);letter-spacing:1px;margin-bottom:4px;
+}
+.library-card-date{
+  font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;
+}
+.library-card-sections{
+  font-family:var(--font-mono);font-size:9px;color:var(--rust);
+  letter-spacing:1px;text-transform:uppercase;
+}
+.library-card-actions{
+  display:flex;gap:6px;margin-top:10px;
+}
+.lib-btn{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:1px;
+  padding:4px 10px;border-radius:2px;cursor:pointer;transition:all 0.12s;
+  border:1px solid var(--border2);color:var(--muted);background:transparent;
+}
+.lib-btn:hover{border-color:var(--gold);color:var(--gold);}
+.lib-btn.del:hover{border-color:var(--rust);color:var(--rust);}
+
+.library-empty{
+  grid-column:1/-1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  color:var(--muted);text-align:center;gap:10px;padding:60px 20px;
+}
+.library-empty .big{font-size:48px;opacity:0.2;}
+
+/* ── API KEY MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.8);
+  display:none;align-items:center;justify-content:center;z-index:1000;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--s1);border:1px solid var(--border2);
+  border-radius:4px;padding:28px;width:440px;max-width:90vw;
+  animation:slideUp 0.2s ease;
+}
+.modal h3{
+  font-family:var(--font-display);font-size:22px;
+  color:var(--gold);letter-spacing:2px;margin-bottom:6px;
+}
+.modal p{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;}
+.modal input{
+  width:100%;background:var(--s2);border:1px solid var(--border);
+  border-radius:3px;color:var(--text);
+  font-family:var(--font-mono);font-size:13px;
+  padding:10px 12px;outline:none;margin-bottom:12px;
+  transition:border-color 0.15s;
+}
+.modal input:focus{border-color:var(--gold);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.modal-cancel{
+  background:transparent;border:1px solid var(--border2);color:var(--muted);
+  font-family:var(--font-mono);font-size:10px;padding:7px 16px;
+  border-radius:2px;cursor:pointer;transition:all 0.12s;
+}
+.modal-cancel:hover{border-color:var(--muted);}
+.modal-save{
+  background:var(--gold);color:var(--bg);border:none;
+  font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1px;
+  padding:7px 20px;border-radius:2px;cursor:pointer;transition:all 0.12s;
+}
+.modal-save:hover{background:var(--gold2);}
+
+/* Typing */
+.typing{display:flex;gap:4px;padding:3px 0;align-items:center;}
+.tdot{
+  width:5px;height:5px;border-radius:50%;background:var(--muted);
+  animation:blink 1.2s infinite;
+}
+.tdot:nth-child(2){animation-delay:.2s;}
+.tdot:nth-child(3){animation-delay:.4s;}
+@keyframes blink{
+  0%,80%,100%{opacity:.2;transform:scale(.8)}
+  40%{opacity:1;transform:scale(1)}
+}
+
+/* Song view modal */
+.song-view-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);
+  display:none;align-items:center;justify-content:center;z-index:1000;
+  padding:20px;
+}
+.song-view-modal.open{display:flex;}
+.song-view-inner{
+  background:var(--s1);border:1px solid var(--border2);border-radius:4px;
+  width:560px;max-width:95vw;max-height:85vh;
+  display:flex;flex-direction:column;overflow:hidden;animation:slideUp 0.2s ease;
+}
+.song-view-head{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.song-view-title{font-family:var(--font-display);font-size:20px;color:var(--gold);letter-spacing:1px;}
+.song-view-body{flex:1;overflow-y:auto;padding:16px;}
+.song-view-body::-webkit-scrollbar{width:3px;}
+.song-view-body::-webkit-scrollbar-thumb{background:var(--border2);}
+.close-btn{
+  background:transparent;border:1px solid var(--border2);color:var(--muted);
+  font-family:var(--font-mono);font-size:10px;padding:4px 10px;
+  border-radius:2px;cursor:pointer;transition:all 0.12s;
+}
+.close-btn:hover{border-color:var(--rust);color:var(--rust);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="logo">Fretboard <span>AI</span></div>
+    <div class="tagline">Guitar · Songwriting · Studio</div>
+  </div>
+  <div class="header-tabs">
+    <button class="tab-btn active" onclick="switchView('write')">✍ Write</button>
+    <button class="tab-btn" onclick="switchView('cover')">🎵 Cover Lookup</button>
+    <button class="tab-btn" onclick="switchView('library')">📚 Library</button>
+  </div>
+  <button class="api-key-btn" id="apiKeyBtn" onclick="openApiModal()">
+    <span class="dot" id="apiDot"></span>
+    <span id="apiKeyLabel">API Key</span>
+  </button>
+</div>
+
+<!-- ── WRITE VIEW ── -->
+<div class="view active" id="writeView">
+  <!-- Chat -->
+  <div class="chat-panel">
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg ai">
+        <div class="avatar">🎸</div>
+        <div class="bubble">
+          Welcome to Fretboard AI. I'm your songwriting partner — let's build something together.<br><br>
+          Tell me the <strong>mood, feeling, or style</strong> you're going for and I'll map out chord progressions, song structure, and lyrics. Or ask me anything about songwriting.
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-area" id="quickArea">
+      <button class="qp" onclick="sq('Something melancholic but hopeful — late night driving alone')">🌙 Melancholic + hopeful</button>
+      <button class="qp" onclick="sq('Upbeat summer road trip energy')">☀️ Summer road trip</button>
+      <button class="qp" onclick="sq('Dark and brooding breakup song')">💔 Dark breakup</button>
+      <button class="qp" onclick="sq('Chill acoustic folk storytelling feel')">🪵 Acoustic folk</button>
+      <button class="qp" onclick="sq('Give me a verse for my current song')">📝 Write a verse</button>
+      <button class="qp" onclick="sq('Now write the chorus')">🎵 Write chorus</button>
+      <button class="qp" onclick="sq('Add a bridge section')">🌉 Add bridge</button>
+      <button class="qp" onclick="sq('Write lyrics for the current section')">✍ Write lyrics</button>
+    </div>
+
+    <div class="input-area">
+      <textarea class="chat-input" id="chatInput"
+        placeholder="Describe a mood, ask for a section, request lyrics, say 'make it darker'..."
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send" id="sendBtn" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+
+  <!-- Song Sheet -->
+  <div class="song-panel">
+    <div class="song-panel-head">
+      <h2 id="songTitleDisplay" title="Click to rename" onclick="editTitle()" style="cursor:pointer;border-bottom:1px dashed var(--border2);padding-bottom:1px" title="Click to rename">Untitled Song</h2>
+      <div class="song-actions">
+        <button class="icon-btn" onclick="newSong()">+ New</button>
+        <button class="icon-btn" onclick="exportSong()">⬇ TXT</button>
+        <button class="icon-btn save" onclick="saveSong()">💾 Save</button>
+      </div>
+    </div>
+
+    <div class="song-scroll" id="songScroll">
+      <div class="song-empty">
+        <div class="big">🎼</div>
+        <div>Your song builds here<br>section by section.</div>
+      </div>
+    </div>
+
+    <div class="diag-bar" id="diagBar" style="display:none">
+      <div class="diag-bar-title">Chord Diagrams — click any chord pill to refresh</div>
+      <div class="diag-row" id="diagRow"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── COVER VIEW ── -->
+<div class="view" id="coverView">
+  <div class="cover-lookup">
+    <div class="cover-lookup-top">
+      <h3>COVER CHORD LOOKUP</h3>
+      <div class="cover-search-row">
+        <input class="cover-input" id="coverInput"
+          placeholder="Song name + artist (e.g. Blackbird by Beatles)..."
+          onkeydown="if(event.key==='Enter') lookupCover()">
+        <button class="lookup-btn" id="lookupBtn" onclick="lookupCover()">Look Up Chords</button>
+      </div>
+    </div>
+    <div class="cover-result" id="coverResult">
+      <div class="song-empty" style="height:200px">
+        <div class="big" style="font-size:28px">🔍</div>
+        <div>Enter any song to get its chords,<br>key, and how to play it.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cover-list-panel">
+    <div class="cover-list-head">
+      <h3>MY COVERS</h3>
+    </div>
+    <div class="cover-list-scroll" id="coverListScroll">
+      <div class="cover-list-empty">No covers saved yet.<br>Look up a song and save it.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LIBRARY VIEW ── -->
+<div class="view" id="libraryView">
+  <div class="library-head">
+    <h2>MY SONGS</h2>
+    <button class="icon-btn" onclick="switchView('write')">+ New Song</button>
+  </div>
+  <div class="library-grid" id="libraryGrid">
+    <div class="library-empty">
+      <div class="big">🎵</div>
+      <div>No songs saved yet.<br>Write something and hit Save.</div>
+    </div>
+  </div>
+</div>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <h3>API KEY</h3>
+    <p>Enter your Anthropic API key. It's stored only in your browser's localStorage — never sent anywhere except directly to Anthropic's API.</p>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
+    <p style="font-size:11px;color:var(--muted);margin-top:-4px;margin-bottom:14px">Get a key at <strong style="color:var(--gold)">console.anthropic.com</strong> → API Keys</p>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeApiModal()">Cancel</button>
+      <button class="modal-save" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- SONG VIEW MODAL -->
+<div class="song-view-modal" id="songViewModal">
+  <div class="song-view-inner">
+    <div class="song-view-head">
+      <div class="song-view-title" id="svTitle"></div>
+      <div style="display:flex;gap:6px">
+        <button class="icon-btn" onclick="exportSavedSong()">⬇ TXT</button>
+        <button class="close-btn" onclick="closeSongView()">✕ Close</button>
+      </div>
+    </div>
+    <div class="song-view-body" id="svBody"></div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────
+let apiKey = localStorage.getItem('fretboard_api_key') || '';
+
+// Restore session from localStorage
+const _sess = JSON.parse(localStorage.getItem('fretboard_session') || '{}');
+let chatHistory = _sess.chatHistory || [];
+let songSections = _sess.songSections || [];
+let songTitle = _sess.songTitle || 'Untitled Song';
+let isLoading = false;
+let currentCoverData = null;
+let viewingSong = null;
+
+function persistSession(){
+  localStorage.setItem('fretboard_session', JSON.stringify({
+    chatHistory, songSections, songTitle
+  }));
+}
+
+// ─── Chord shapes (strings 0=low E to 5=high e, value=fret, -1=mute) ─
+const SHAPES = {
+  'Am':[0,0,2,2,1,0],'A':[0,0,2,2,2,0],'A7':[0,0,2,0,2,0],
+  'C':[0,3,2,0,1,0],'Cadd9':[0,3,2,0,3,3],
+  'D':[0,0,0,2,3,2],'Dm':[0,0,0,2,3,1],'D7':[0,0,0,2,1,2],
+  'E':[0,2,2,1,0,0],'Em':[0,2,2,0,0,0],'E7':[0,2,0,1,0,0],
+  'F':[1,3,3,2,1,1],'Fmaj7':[0,0,3,2,1,0],
+  'G':[3,2,0,0,0,3],'G7':[3,2,0,0,0,1],
+  'Bm':[0,2,4,4,3,2],'B7':[0,2,1,2,0,2],
+  'Gmaj7':[3,2,0,0,0,2],'Cmaj7':[0,3,2,0,0,0],
+  'Am7':[0,0,2,0,1,0],'Em7':[0,2,2,0,3,0],
+};
+
+function drawDiagram(name) {
+  const shape = SHAPES[name];
+  if (!shape) return '';
+  const strings=6,frets=4,sw=9,sh=11,px=16,py=18;
+  const w=sw*(strings-1)+px*2, h=sh*frets+py+16;
+  const fretted=shape.filter(f=>f>0);
+  const minFret=fretted.length?Math.min(...fretted):0;
+  const offset=minFret>2?minFret-1:0;
+  let s=`<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">`;
+  if(offset===0){
+    s+=`<line x1="${px}" y1="${py}" x2="${px+sw*(strings-1)}" y2="${py}" stroke="#d4a843" stroke-width="2.5"/>`;
+  } else {
+    s+=`<text x="${px-4}" y="${py+sh*.7}" text-anchor="end" fill="#556070" font-size="7" font-family="monospace">${offset+1}fr</text>`;
+  }
+  for(let f=1;f<=frets;f++){
+    const y=py+f*sh;
+    s+=`<line x1="${px}" y1="${y}" x2="${px+sw*(strings-1)}" y2="${y}" stroke="#252d3d" stroke-width=".8"/>`;
+  }
+  for(let i=0;i<strings;i++){
+    const x=px+i*sw;
+    s+=`<line x1="${x}" y1="${py}" x2="${x}" y2="${py+sh*frets}" stroke="#2e3848" stroke-width=".8"/>`;
+  }
+  shape.forEach((fret,i)=>{
+    const x=px+i*sw;
+    if(fret===-1){
+      s+=`<text x="${x}" y="${py-5}" text-anchor="middle" fill="#556070" font-size="9" font-family="monospace">×</text>`;
+    } else if(fret===0){
+      s+=`<circle cx="${x}" cy="${py-7}" r="3.5" fill="none" stroke="#d4a843" stroke-width="1.2"/>`;
+    } else {
+      const adj=fret-offset;
+      s+=`<circle cx="${x}" cy="${py+(adj-.5)*sh}" r="4" fill="#d4a843"/>`;
+    }
+  });
+  s+=`</svg>`;
+  return s;
+}
+
+function showDiagrams(chords) {
+  const bar=document.getElementById('diagBar');
+  const row=document.getElementById('diagRow');
+  const known=chords.filter(c=>SHAPES[c]);
+  if(!known.length){bar.style.display='none';return;}
+  bar.style.display='block';
+  row.innerHTML=known.map(c=>`
+    <div class="diag-item">
+      <div class="diag-name">${c}</div>
+      ${drawDiagram(c)}
+    </div>`).join('');
+}
+
+// ─── API ──────────────────────────────────────────────────────────
+function updateApiDot(){
+  const dot=document.getElementById('apiDot');
+  const lbl=document.getElementById('apiKeyLabel');
+  if(apiKey){dot.className='dot ok';lbl.textContent='Key Set ✓';}
+  else{dot.className='dot';lbl.textContent='API Key';}
+}
+updateApiDot();
+
+function openApiModal(){
+  document.getElementById('apiKeyInput').value=apiKey;
+  document.getElementById('apiModal').classList.add('open');
+}
+function closeApiModal(){document.getElementById('apiModal').classList.remove('open');}
+function saveApiKey(){
+  apiKey=document.getElementById('apiKeyInput').value.trim();
+  localStorage.setItem('fretboard_api_key',apiKey);
+  updateApiDot();
+  closeApiModal();
+}
+
+async function callClaude(system, messages, maxTokens=1200){
+  if(!apiKey) throw new Error('NO_KEY');
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':apiKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-5',
+      max_tokens:maxTokens,
+      system,
+      messages
+    })
+  });
+  const data=await res.json();
+  if(data.error) throw new Error(data.error.message||'API error');
+  return data.content.map(b=>b.text||'').join('');
+}
+
+// ─── Parse JSON block from AI ──────────────────────────────────────
+function parseBlock(text){
+  const m=text.match(/```json\s*([\s\S]*?)\s*```/);
+  if(m){try{return JSON.parse(m[1]);}catch(e){}}
+  return null;
+}
+
+// ─── Views ────────────────────────────────────────────────────────
+function switchView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById(v+'View').classList.add('active');
+  const idx={write:0,cover:1,library:2}[v];
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+  if(v==='library') renderLibrary();
+}
+
+// ─── Song Sheet ───────────────────────────────────────────────────
+function addSection(sec){
+  const i=songSections.findIndex(s=>s.label===sec.label);
+  if(i>=0) songSections[i]=sec; else songSections.push(sec);
+  persistSession();
+  renderSheet();
+}
+
+function renderSheet(){
+  const el=document.getElementById('songScroll');
+  if(!songSections.length){
+    el.innerHTML=`<div class="song-empty"><div class="big">🎼</div><div>Your song builds here<br>section by section.</div></div>`;
+    return;
+  }
+  el.innerHTML=songSections.map(s=>`
+    <div class="section-block">
+      <div class="section-block-head">
+        <span class="section-block-label">${s.label}</span>
+      </div>
+      <div class="section-block-chords">${s.chords}</div>
+      <div class="section-block-lyrics">${s.lyrics||'<span class="no-lyrics">No lyrics yet — ask me to write some!</span>'}</div>
+    </div>`).join('');
+}
+
+// ─── Chat ─────────────────────────────────────────────────────────
+function addMsg(role, html, chords, tag){
+  const c=document.getElementById('chatMessages');
+  const d=document.createElement('div');
+  d.className=`msg ${role}`;
+  const av=role==='user'?'🎸':'🎵';
+  const tagHtml=tag?`<div class="sec-tag">${tag}</div>`:'';
+  const pills=(chords&&chords.length)?`<div class="chord-pills">${chords.map(ch=>`<span class="pill" onclick="showDiagrams(['${ch}'])">${ch}</span>`).join('')}</div>`:'';
+  d.innerHTML=`<div class="avatar">${av}</div><div class="bubble">${tagHtml}${html}${pills}</div>`;
+  c.appendChild(d);
+  c.scrollTop=c.scrollHeight;
+}
+
+function showTyping(){
+  const c=document.getElementById('chatMessages');
+  const d=document.createElement('div');
+  d.className='msg ai';d.id='typing';
+  d.innerHTML=`<div class="avatar">🎵</div><div class="bubble"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function removeTyping(){const e=document.getElementById('typing');if(e)e.remove();}
+
+async function sendChat(){
+  const inp=document.getElementById('chatInput');
+  const txt=inp.value.trim();
+  if(!txt||isLoading)return;
+  if(!apiKey){openApiModal();return;}
+
+  isLoading=true;
+  inp.value='';inp.style.height='auto';
+  document.getElementById('sendBtn').disabled=true;
+  document.getElementById('quickArea').style.display='none';
+
+  addMsg('user',txt.replace(/\n/g,'<br>'));
+  showTyping();
+  chatHistory.push({role:'user',content:txt});
+
+  const sys=`You are Fretboard AI — a world-class guitar-focused songwriting partner. Help the user build complete songs through conversation.
+
+Your abilities:
+- Translate moods/feelings into chord progressions
+- Build song structure: Intro, Verse 1, Verse 2, Pre-Chorus, Chorus, Bridge, Outro
+- Write lyrics that match the chords and vibe
+- Suggest variations, make it "darker", "more hopeful", etc.
+- Give music theory explanations when helpful
+
+ALWAYS end your response with a JSON block:
+\`\`\`json
+{
+  "section": {
+    "label": "Chorus",
+    "chords": "C - G - Am - F (repeat)",
+    "lyrics": "Optional lyrics if writing them\\nSecond line\\nThird line"
+  },
+  "chords": ["C","G","Am","F"],
+  "title": "My Song Title"
+}
+\`\`\`
+
+JSON rules:
+- section.label: Intro | Verse 1 | Verse 2 | Pre-Chorus | Chorus | Bridge | Outro
+- section.chords: readable string like "Am - F - C - G (4x)" 
+- section.lyrics: omit if not writing lyrics; use \\n for line breaks
+- chords: array of unique chord names for diagram display
+- title: only set when you have a compelling title idea; omit otherwise
+- Prose before JSON: warm, musical, 2-5 sentences
+- Use guitar-friendly voicings in standard tuning
+- ALWAYS include the JSON block, even for general conversation (use null for section if just chatting)
+
+Current song: title="${songTitle}", sections=${JSON.stringify(songSections)}`;
+
+  try{
+    const full=await callClaude(sys,chatHistory);
+    chatHistory.push({role:'assistant',content:full});
+
+    const parsed=parseBlock(full);
+    const prose=full.replace(/```json[\s\S]*?```/,'').trim();
+    const chords=parsed?.chords||[];
+
+    if(parsed?.title&&parsed.title!=='Untitled Song'){
+      songTitle=parsed.title;
+      document.getElementById('songTitleDisplay').textContent=songTitle;
+    }
+    if(parsed?.section&&parsed.section.label){
+      addSection(parsed.section);
+    }
+    if(chords.length) showDiagrams(chords);
+
+    removeTyping();
+    addMsg('ai',prose.replace(/\n/g,'<br>'),chords,parsed?.section?.label||null);
+    persistSession();
+
+  }catch(err){
+    removeTyping();
+    chatHistory.pop();
+    if(err.message==='NO_KEY'){
+      addMsg('ai','Please set your API key first — click <strong>API Key</strong> in the top right.');
+    } else {
+      addMsg('ai',`Error: ${err.message}`);
+    }
+  }
+
+  isLoading=false;
+  document.getElementById('sendBtn').disabled=false;
+}
+
+function sq(t){document.getElementById('chatInput').value=t;sendChat();}
+
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px';}
+
+// ─── Save / Export Song ───────────────────────────────────────────
+function editTitle(){
+  const el=document.getElementById('songTitleDisplay');
+  const current=songTitle;
+  el.style.display='none';
+  const inp=document.createElement('input');
+  inp.value=current;
+  inp.style.cssText=`
+    background:var(--s2);border:1px solid var(--gold);border-radius:2px;
+    color:var(--gold);font-family:var(--font-display);font-size:16px;
+    letter-spacing:1px;padding:2px 6px;outline:none;width:160px;
+  `;
+  el.parentNode.insertBefore(inp,el);
+  inp.focus();inp.select();
+  function commit(){
+    const val=inp.value.trim()||current;
+    songTitle=val;
+    el.textContent=val;
+    el.style.display='';
+    inp.remove();
+    persistSession();
+  }
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter')commit();
+    if(e.key==='Escape'){inp.value=current;commit();}
+  });
+}
+
+function newSong(){
+  if(songSections.length&&!confirm('Start a new song? Current unsaved work will be lost.'))return;
+  songTitle='Untitled Song';
+  songSections=[];
+  chatHistory=[];
+  persistSession();
+  document.getElementById('songTitleDisplay').textContent=songTitle;
+  renderSheet();
+  document.getElementById('chatMessages').innerHTML=`
+    <div class="msg ai">
+      <div class="avatar">🎸</div>
+      <div class="bubble">Fresh start! Tell me the <strong>mood, feeling, or style</strong> you're going for and let's build something new.</div>
+    </div>`;
+  document.getElementById('quickArea').style.display='flex';
+}
+
+function saveSong(){
+  if(!songSections.length){alert('Write some sections first!');return;}
+  const songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
+  const song={
+    id:Date.now(),
+    title:songTitle,
+    sections:songSections,
+    date:new Date().toLocaleDateString()
+  };
+  songs.unshift(song);
+  localStorage.setItem('fretboard_songs',JSON.stringify(songs));
+  alert(`"${songTitle}" saved to your library!`);
+}
+
+function exportSong(){
+  if(!songSections.length){alert('Write some sections first!');return;}
+  doExport(songTitle,songSections);
+}
+
+function doExport(title,sections){
+  let out=`${title}\n${'='.repeat(title.length)}\n\n`;
+  sections.forEach(s=>{
+    out+=`[${s.label}]\nChords: ${s.chords}\n`;
+    if(s.lyrics)out+=`\n${s.lyrics}\n`;
+    out+='\n';
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
+  a.download=`${title.replace(/\s+/g,'_')}.txt`;
+  a.click();
+}
+
+// ─── Library ─────────────────────────────────────────────────────
+function renderLibrary(){
+  const songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
+  const grid=document.getElementById('libraryGrid');
+  if(!songs.length){
+    grid.innerHTML=`<div class="library-empty"><div class="big">🎵</div><div>No songs saved yet.<br>Write something and hit Save.</div></div>`;
+    return;
+  }
+  grid.innerHTML=songs.map(s=>`
+    <div class="library-card">
+      <div class="library-card-title">${s.title}</div>
+      <div class="library-card-date">${s.date}</div>
+      <div class="library-card-sections">${s.sections.map(sec=>sec.label).join(' · ')}</div>
+      <div class="library-card-actions">
+        <button class="lib-btn" onclick="viewSong(${s.id})">View</button>
+        <button class="lib-btn" onclick="loadSong(${s.id})">Load</button>
+        <button class="lib-btn" onclick="exportSavedSongById(${s.id})">⬇ TXT</button>
+        <button class="lib-btn del" onclick="deleteSong(${s.id})">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function getSongById(id){
+  const songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
+  return songs.find(s=>s.id===id);
+}
+
+function viewSong(id){
+  const song=getSongById(id);
+  if(!song)return;
+  viewingSong=song;
+  document.getElementById('svTitle').textContent=song.title;
+  document.getElementById('svBody').innerHTML=song.sections.map(s=>`
+    <div class="section-block" style="margin-bottom:10px">
+      <div class="section-block-head"><span class="section-block-label">${s.label}</span></div>
+      <div class="section-block-chords">${s.chords}</div>
+      <div class="section-block-lyrics">${s.lyrics||'<span class="no-lyrics">No lyrics</span>'}</div>
+    </div>`).join('');
+  document.getElementById('songViewModal').classList.add('open');
+}
+
+function closeSongView(){document.getElementById('songViewModal').classList.remove('open');viewingSong=null;}
+
+function exportSavedSong(){if(viewingSong)doExport(viewingSong.title,viewingSong.sections);}
+function exportSavedSongById(id){const s=getSongById(id);if(s)doExport(s.title,s.sections);}
+
+function loadSong(id){
+  const song=getSongById(id);
+  if(!song)return;
+  songTitle=song.title;
+  songSections=[...song.sections];
+  chatHistory=[];
+  persistSession();
+  document.getElementById('songTitleDisplay').textContent=songTitle;
+  renderSheet();
+  switchView('write');
+  addMsg('ai',`Loaded <strong>${songTitle}</strong> into the editor. Let's keep working on it!`);
+}
+
+function deleteSong(id){
+  if(!confirm('Delete this song?'))return;
+  let songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
+  songs=songs.filter(s=>s.id!==id);
+  localStorage.setItem('fretboard_songs',JSON.stringify(songs));
+  renderLibrary();
+}
+
+// ─── Cover Lookup ─────────────────────────────────────────────────
+async function lookupCover(){
+  const inp=document.getElementById('coverInput');
+  const query=inp.value.trim();
+  if(!query)return;
+  if(!apiKey){openApiModal();return;}
+
+  const btn=document.getElementById('lookupBtn');
+  btn.disabled=true;btn.textContent='Looking up...';
+
+  const result=document.getElementById('coverResult');
+  result.innerHTML=`<div class="song-empty" style="height:150px"><div class="typing" style="justify-content:center"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+
+  const sys=`You are a guitar chord and tab expert. Given a song name (and optionally artist), return everything needed to play it on guitar.
+
+Always respond with ONLY a JSON block like this:
+\`\`\`json
+{
+  "title": "Blackbird",
+  "artist": "The Beatles",
+  "key": "G major",
+  "capo": "No capo",
+  "tuning": "Standard (EADGBe)",
+  "sections": [
+    {"label": "Intro / Main theme", "chords": "G Am G/B G"},
+    {"label": "Verse", "chords": "G Am7 G/B C"},
+    {"label": "Chorus", "chords": "F C/E Dm C Bb C"}
+  ],
+  "chords": ["G","Am","C","F","Dm"],
+  "tabs": [
+    {
+      "label": "Intro Riff",
+      "tab": "e|--3--3--3--3--3--3--3--3--|\nB|--3--3--3--3--1--1--1--1--|\nG|--0--0--0--0--2--2--0--0--|\nD|--0--0--2--0--2--2--0--0--|\nA|--2--2--3--2--0--0--2--2--|\nE|--3--3--3--3--3--3--3--3--|"
+    },
+    {
+      "label": "Picking Pattern",
+      "tab": "e|------------3-|\nB|----------3---|\nG|--------0-----|\nD|------0-------|\nA|----2---------|\nE|--3-----------|"
+    }
+  ],
+  "notes": "Fingerpicking pattern: p-i-m-a on each chord. The song uses a lot of moving bass lines.",
+  "difficulty": "Intermediate"
+}
+\`\`\`
+
+Rules:
+- sections: main distinct parts of the song with chord names
+- chords: unique chord names for diagram display (common ones only)
+- tabs: 1-3 tab sections — include the most iconic/useful parts: intro riff, main picking pattern, signature lick, or solo if notable. Use standard 6-string tab format with string names (e B G D A E). Use \\n for line breaks within tab strings.
+- notes: brief tips on technique, strumming, key info
+- Be musically accurate. If a song has a famous intro riff or solo, include it.`;
+
+  try{
+    const full=await callClaude(sys,[{role:'user',content:`Give me the guitar chords for: ${query}`}],800);
+    const parsed=parseBlock(full);
+
+    if(!parsed){
+      result.innerHTML=`<div style="padding:20px;color:var(--muted)">Couldn't parse chord data. Try again.</div>`;
+    } else {
+      currentCoverData=parsed;
+      result.innerHTML=`
+        <div class="cover-result-card">
+          <div class="cover-result-title">${parsed.title}</div>
+          <div class="cover-result-artist">${parsed.artist||''} · Key: ${parsed.key||'?'} · ${parsed.capo||'No capo'} · Tuning: ${parsed.tuning||'Standard'} · ${parsed.difficulty||''}</div>
+          ${(parsed.sections||[]).map(s=>`
+            <div class="cover-result-section">
+              <h4>${s.label}</h4>
+              <div class="cover-chords">${s.chords}</div>
+            </div>`).join('')}
+          ${parsed.notes?`<div class="cover-notes">${parsed.notes}</div>`:''}
+          ${(parsed.tabs&&parsed.tabs.length)?`
+            <div class="tab-block">
+              <div class="tab-block-title">Tablature</div>
+              ${parsed.tabs.map(t=>`
+                <div class="tab-block-label">${t.label}</div>
+                <pre class="tab-pre">${t.tab}</pre>
+              `).join('')}
+            </div>`:''}
+          <div class="diag-bar" style="padding:10px 0;background:transparent;border-top:1px solid var(--border);margin-top:12px">
+            <div class="diag-bar-title">Chord Diagrams</div>
+            <div class="diag-row" style="margin-top:8px">
+              ${(parsed.chords||[]).filter(c=>SHAPES[c]).map(c=>`
+                <div class="diag-item">
+                  <div class="diag-name">${c}</div>
+                  ${drawDiagram(c)}
+                </div>`).join('')}
+            </div>
+          </div>
+          <button class="save-cover-btn" onclick="saveCover()">💾 Save to My Covers</button>
+        </div>`;
+    }
+  }catch(err){
+    if(err.message==='NO_KEY'){
+      result.innerHTML=`<div style="padding:20px;color:var(--muted)">Please set your API key first.</div>`;
+      openApiModal();
+    } else {
+      result.innerHTML=`<div style="padding:20px;color:var(--muted)">Error: ${err.message}</div>`;
+    }
+  }
+
+  btn.disabled=false;btn.textContent='Look Up Chords';
+}
+
+function saveCover(){
+  if(!currentCoverData)return;
+  const covers=JSON.parse(localStorage.getItem('fretboard_covers')||'[]');
+  if(covers.find(c=>c.title===currentCoverData.title&&c.artist===currentCoverData.artist)){
+    alert('Already saved!');return;
+  }
+  covers.unshift({...currentCoverData,savedAt:Date.now()});
+  localStorage.setItem('fretboard_covers',JSON.stringify(covers));
+  renderCovers();
+  alert(`"${currentCoverData.title}" saved to your cover list!`);
+}
+
+function renderCovers(){
+  const covers=JSON.parse(localStorage.getItem('fretboard_covers')||'[]');
+  const el=document.getElementById('coverListScroll');
+  if(!covers.length){
+    el.innerHTML=`<div class="cover-list-empty">No covers saved yet.<br>Look up a song and save it.</div>`;
+    return;
+  }
+  el.innerHTML=covers.map((c,i)=>`
+    <div class="cover-item" onclick="loadCoverIntoResult(${i})">
+      <div class="cover-item-title">${c.title}</div>
+      <div class="cover-item-artist">${c.artist||''}</div>
+      <div class="cover-item-key">${c.key||''} · ${c.difficulty||''}</div>
+    </div>`).join('');
+}
+
+function loadCoverIntoResult(idx){
+  const covers=JSON.parse(localStorage.getItem('fretboard_covers')||'[]');
+  const c=covers[idx];
+  if(!c)return;
+  currentCoverData=c;
+  document.getElementById('coverResult').innerHTML=`
+    <div class="cover-result-card">
+      <div class="cover-result-title">${c.title}</div>
+      <div class="cover-result-artist">${c.artist||''} · Key: ${c.key||'?'} · ${c.capo||'No capo'} · Tuning: ${c.tuning||'Standard'} · ${c.difficulty||''}</div>
+      ${(c.sections||[]).map(s=>`
+        <div class="cover-result-section">
+          <h4>${s.label}</h4>
+          <div class="cover-chords">${s.chords}</div>
+        </div>`).join('')}
+      ${c.notes?`<div class="cover-notes">${c.notes}</div>`:''}
+      ${(c.tabs&&c.tabs.length)?`
+        <div class="tab-block">
+          <div class="tab-block-title">Tablature</div>
+          ${c.tabs.map(t=>`
+            <div class="tab-block-label">${t.label}</div>
+            <pre class="tab-pre">${t.tab}</pre>
+          `).join('')}
+        </div>`:''}
+      <div class="diag-bar" style="padding:10px 0;background:transparent;border-top:1px solid var(--border);margin-top:12px">
+        <div class="diag-bar-title">Chord Diagrams</div>
+        <div class="diag-row" style="margin-top:8px">
+          ${(c.chords||[]).filter(ch=>SHAPES[ch]).map(ch=>`
+            <div class="diag-item">
+              <div class="diag-name">${ch}</div>
+              ${drawDiagram(ch)}
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+renderCovers();
+
+// ─── Restore session on load ──────────────────────────────────────
+(function restoreSession(){
+  if(songTitle!=='Untitled Song'){
+    document.getElementById('songTitleDisplay').textContent=songTitle;
+  }
+  if(songSections.length) renderSheet();
+
+  if(chatHistory.length){
+    document.getElementById('chatMessages').innerHTML='';
+    document.getElementById('quickArea').style.display='none';
+    for(let i=0;i<chatHistory.length;i++){
+      const m=chatHistory[i];
+      if(m.role==='user'){
+        addMsg('user',m.content.replace(/\n/g,'<br>'));
+      } else {
+        const parsed=parseBlock(m.content);
+        const prose=m.content.replace(/```json[\s\S]*?```/,'').trim();
+        const chords=parsed?.chords||[];
+        addMsg('ai',prose.replace(/\n/g,'<br>'),chords,parsed?.section?.label||null);
+      }
+    }
+    // Restore chord diagrams from last AI message
+    for(let i=chatHistory.length-1;i>=0;i--){
+      if(chatHistory[i].role==='assistant'){
+        const parsed=parseBlock(chatHistory[i].content);
+        if(parsed?.chords?.length) showDiagrams(parsed.chords);
+        break;
+      }
+    }
+  }
+})();
+
+</body>
+</html>
