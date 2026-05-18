@@ -198,6 +198,23 @@ textarea.ci::placeholder{color:var(--muted);}
 .svbody{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch;}
 .xbtn{background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:var(--fm);font-size:10px;padding:6px 12px;border-radius:2px;cursor:pointer;}
 
+/* SECTION EDITING */
+.sblock-edit-bar{display:flex;gap:4px;padding:5px 8px;border-top:1px solid var(--border);background:var(--bg);flex-wrap:wrap;}
+.ebtn{font-family:var(--fm);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;border-radius:2px;cursor:pointer;border:1px solid var(--border2);color:var(--muted);background:transparent;transition:all .12s;white-space:nowrap;}
+.ebtn:hover,.ebtn:active{border-color:var(--gold);color:var(--gold);}
+.ebtn.del:hover,.ebtn.del:active{border-color:var(--rust);color:var(--rust);}
+.ebtn.up:hover,.ebtn.up:active,.ebtn.dn:hover,.ebtn.dn:active{border-color:var(--muted);color:var(--text);}
+.inline-edit{width:100%;background:var(--s2);border:1px solid var(--gold);border-radius:2px;color:var(--text);font-family:var(--fm);font-size:12px;padding:7px 10px;outline:none;margin:6px 0 2px;-webkit-appearance:none;}
+.inline-edit:focus{border-color:var(--gold2);}
+.inline-textarea{width:100%;background:var(--s2);border:1px solid var(--gold);border-radius:2px;color:var(--text);font-family:var(--fb);font-size:13px;padding:8px 10px;outline:none;resize:none;min-height:80px;line-height:1.65;margin:6px 0 2px;-webkit-appearance:none;font-style:italic;}
+.inline-textarea:focus{border-color:var(--gold2);}
+.inline-tab{width:100%;background:#0d1a0d;border:1px solid #1e3a1e;border-radius:2px;color:#a8c4a8;font-family:var(--fm);font-size:11px;padding:8px 10px;outline:none;resize:none;min-height:100px;line-height:1.6;margin:6px 0 2px;-webkit-appearance:none;white-space:pre;}
+.inline-tab:focus{border-color:#3a7d5a;}
+.sblock-notes{padding:6px 10px;font-family:var(--fm);font-size:11px;color:var(--muted);line-height:1.6;border-bottom:1px solid var(--border);background:var(--bg);font-style:normal;}
+.edit-actions{display:flex;gap:6px;margin-bottom:6px;}
+.esave{background:var(--green);color:#fff;border:none;font-family:var(--fm);font-size:9px;letter-spacing:1px;padding:6px 14px;border-radius:2px;cursor:pointer;}
+.ecancel{background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:var(--fm);font-size:9px;padding:6px 12px;border-radius:2px;cursor:pointer;}
+
 /* TYPING */
 .typing{display:flex;gap:4px;padding:3px 0;align-items:center;}
 .tdot{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite;}
@@ -523,22 +540,169 @@ function commitSection(sec){
 function renderSheet(){
   const el=document.getElementById('sscroll');
   if(!sections.length){el.innerHTML=`<div class="sempty"><div class="big">🎼</div><div>Your song builds here.<br>Approve sections from the chat.</div></div>`;return;}
-  el.innerHTML=sections.map(s=>{
+  el.innerHTML=sections.map((s,i)=>{
+    const isFirst=i===0,isLast=i===sections.length-1;
+    const editBar=`<div class="sblock-edit-bar">
+      <button class="ebtn" onclick="editLabel(${i})">✎ Label</button>
+      ${s.stype==='chords'?`<button class="ebtn" onclick="editChords(${i})">✎ Chords</button>`:`<button class="ebtn" onclick="editTab(${i})">✎ Tab</button>`}
+      <button class="ebtn" onclick="editLyrics(${i})">✎ ${s.lyrics?'Edit':'Add'} Lyrics</button>
+      <button class="ebtn" onclick="editNotes(${i})">✎ ${s.notes?'Edit':'Add'} Notes</button>
+      ${!isFirst?`<button class="ebtn up" onclick="moveSection(${i},-1)">↑</button>`:''}
+      ${!isLast?`<button class="ebtn dn" onclick="moveSection(${i},1)">↓</button>`:''}
+      <button class="ebtn del" onclick="removeSection(${i})">✕ Remove</button>
+    </div>`;
+
     if(s.stype==='tab'){
-      return `<div class="sblock">
+      return `<div class="sblock" id="sb_${i}">
         <div class="sblock-head"><span class="sblock-label">${s.label}</span><span class="sblock-type">Tab</span></div>
-        <div class="sblock-tab">${s.tab}</div>
-        ${s.lyrics?`<div class="sblock-lyrics">${s.lyrics}</div>`:''}
+        <div class="sblock-tab" id="sbt_${i}">${s.tab}</div>
+        ${s.notes?`<div class="sblock-notes" id="sbn_${i}">📝 ${s.notes}</div>`:''}
+        ${s.lyrics?`<div class="sblock-lyrics" id="sbl_${i}">${s.lyrics}</div>`:''}
+        ${editBar}
       </div>`;
     } else {
-      return `<div class="sblock">
+      return `<div class="sblock" id="sb_${i}">
         <div class="sblock-head"><span class="sblock-label">${s.label}</span><span class="sblock-type">Chords</span></div>
-        <div class="sblock-chords">${s.chords}</div>
+        <div class="sblock-chords" id="sbc_${i}">${s.chords}</div>
         ${s.pattern?`<div class="sblock-pattern">${s.pattern}</div>`:''}
-        ${s.lyrics?`<div class="sblock-lyrics">${s.lyrics}</div>`:`<div class="sblock-lyrics"><span class="nolyr">No lyrics yet — ask me to write some</span></div>`}
+        ${s.notes?`<div class="sblock-notes" id="sbn_${i}">📝 ${s.notes}</div>`:''}
+        <div class="sblock-lyrics" id="sbl_${i}">${s.lyrics||`<span class="nolyr">No lyrics yet</span>`}</div>
+        ${editBar}
       </div>`;
     }
   }).join('');
+}
+
+// ── Section editing functions ─────────────────────────────────────
+function removeSection(i){
+  if(!confirm(`Remove "${sections[i].label}"?`))return;
+  sections.splice(i,1);persist();renderSheet();
+}
+
+function moveSection(i,dir){
+  const j=i+dir;
+  if(j<0||j>=sections.length)return;
+  [sections[i],sections[j]]=[sections[j],sections[i]];
+  persist();renderSheet();
+  // scroll moved block into view
+  setTimeout(()=>{const el=document.getElementById('sb_'+j);if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});},50);
+}
+
+function editLabel(i){
+  const sec=sections[i],block=document.getElementById('sb_'+i);
+  const head=block.querySelector('.sblock-head');
+  const orig=sec.label;
+  head.innerHTML=`<input class="inline-edit" id="lbl_edit_${i}" value="${orig}" placeholder="Section label">
+    <div class="edit-actions">
+      <button class="esave" onclick="saveLabel(${i})">Save</button>
+      <button class="ecancel" onclick="renderSheet()">Cancel</button>
+    </div>`;
+  const inp=document.getElementById(`lbl_edit_${i}`);
+  inp.focus();inp.select();
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')saveLabel(i);if(e.key==='Escape')renderSheet();});
+}
+
+function saveLabel(i){
+  const val=document.getElementById(`lbl_edit_${i}`)?.value.trim();
+  if(val)sections[i].label=val;
+  persist();renderSheet();
+}
+
+function editChords(i){
+  const sec=sections[i],block=document.getElementById('sb_'+i);
+  const chordsEl=document.getElementById('sbc_'+i);
+  const orig=sec.chords||'';
+  chordsEl.innerHTML=`<input class="inline-edit" id="chd_edit_${i}" value="${orig}" placeholder="e.g. Am - F - C - G (4x)">
+    <div class="edit-actions">
+      <button class="esave" onclick="saveChords(${i})">Save</button>
+      <button class="ecancel" onclick="renderSheet()">Cancel</button>
+    </div>`;
+  const inp=document.getElementById(`chd_edit_${i}`);
+  inp.focus();inp.select();
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')saveChords(i);if(e.key==='Escape')renderSheet();});
+}
+
+function saveChords(i){
+  const val=document.getElementById(`chd_edit_${i}`)?.value.trim();
+  if(val)sections[i].chords=val;
+  persist();renderSheet();
+}
+
+function editTab(i){
+  const sec=sections[i],block=document.getElementById('sb_'+i);
+  const tabEl=document.getElementById('sbt_'+i);
+  const orig=sec.tab||'';
+  tabEl.innerHTML=`<textarea class="inline-tab" id="tab_edit_${i}" spellcheck="false">${orig}</textarea>
+    <div class="edit-actions">
+      <button class="esave" onclick="saveTab(${i})">Save</button>
+      <button class="ecancel" onclick="renderSheet()">Cancel</button>
+    </div>`;
+  const ta=document.getElementById(`tab_edit_${i}`);
+  ta.focus();
+}
+
+function saveTab(i){
+  const val=document.getElementById(`tab_edit_${i}`)?.value;
+  if(val!==undefined)sections[i].tab=val;
+  persist();renderSheet();
+}
+
+function editLyrics(i){
+  const sec=sections[i],block=document.getElementById('sb_'+i);
+  const lyrEl=document.getElementById('sbl_'+i);
+  const orig=sec.lyrics||'';
+  if(lyrEl){
+    lyrEl.innerHTML=`<textarea class="inline-textarea" id="lyr_edit_${i}" placeholder="Write your lyrics here...">${orig}</textarea>
+      <div class="edit-actions">
+        <button class="esave" onclick="saveLyrics(${i})">Save</button>
+        <button class="ecancel" onclick="renderSheet()">Cancel</button>
+      </div>`;
+  } else {
+    // No lyrics div yet (tab sections), append before edit bar
+    const editBar=block.querySelector('.sblock-edit-bar');
+    const div=document.createElement('div');
+    div.className='sblock-lyrics';div.id=`sbl_${i}`;
+    div.innerHTML=`<textarea class="inline-textarea" id="lyr_edit_${i}" placeholder="Write your lyrics here...">${orig}</textarea>
+      <div class="edit-actions">
+        <button class="esave" onclick="saveLyrics(${i})">Save</button>
+        <button class="ecancel" onclick="renderSheet()">Cancel</button>
+      </div>`;
+    block.insertBefore(div,editBar);
+  }
+  const ta=document.getElementById(`lyr_edit_${i}`);
+  if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
+}
+
+function saveLyrics(i){
+  const val=document.getElementById(`lyr_edit_${i}`)?.value;
+  if(val!==undefined)sections[i].lyrics=val.trim()||null;
+  persist();renderSheet();
+}
+
+function editNotes(i){
+  const sec=sections[i],block=document.getElementById('sb_${i}');
+  const orig=sec.notes||'';
+  // find or create notes div before edit bar
+  let notesEl=document.getElementById(`sbn_${i}`);
+  const editBarEl=document.getElementById('sb_'+i).querySelector('.sblock-edit-bar');
+  if(!notesEl){
+    notesEl=document.createElement('div');
+    notesEl.className='sblock-notes';notesEl.id=`sbn_${i}`;
+    document.getElementById('sb_'+i).insertBefore(notesEl,editBarEl);
+  }
+  notesEl.innerHTML=`<textarea class="inline-textarea" id="not_edit_${i}" placeholder="Capo 2, palm mute, play softly, reminder notes..." style="font-style:normal;font-family:var(--fm);font-size:11px;min-height:60px">${orig}</textarea>
+    <div class="edit-actions">
+      <button class="esave" onclick="saveNotes(${i})">Save</button>
+      <button class="ecancel" onclick="renderSheet()">Cancel</button>
+    </div>`;
+  const ta=document.getElementById(`not_edit_${i}`);
+  if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
+}
+
+function saveNotes(i){
+  const val=document.getElementById(`not_edit_${i}`)?.value;
+  if(val!==undefined)sections[i].notes=val.trim()||null;
+  persist();renderSheet();
 }
 
 // ── Commit Card ───────────────────────────────────────────────────
@@ -746,6 +910,7 @@ function doExport(title,secs){
     out+=`[${s.label}]${s.stype==='tab'?' (Tab)':''}\n`;
     if(s.stype==='tab'&&s.tab)out+=s.tab+'\n';
     else if(s.chords)out+=`Chords: ${s.chords}\n${s.pattern?s.pattern+'\n':''}`;
+    if(s.notes)out+=`Notes: ${s.notes}\n`;
     if(s.lyrics)out+=`\n${s.lyrics}\n`;
     out+='\n';
   });
