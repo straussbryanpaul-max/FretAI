@@ -555,6 +555,10 @@ textarea.chat-input::placeholder{color:var(--muted);}
     <span class="dot" id="apiDot"></span>
     <span id="apiKeyLabel">API Key</span>
   </button>
+  <button class="api-key-btn" id="syncBtn" onclick="manualSync()">
+    <span class="dot" id="syncDot"></span>
+    <span id="syncLabel">☁ Sync</span>
+  </button>
 </div>
 
 <!-- ── WRITE VIEW ── -->
@@ -662,13 +666,23 @@ textarea.chat-input::placeholder{color:var(--muted);}
 <!-- API KEY MODAL -->
 <div class="modal-overlay" id="apiModal">
   <div class="modal">
-    <h3>API KEY</h3>
-    <p>Enter your Anthropic API key. It's stored only in your browser's localStorage — never sent anywhere except directly to Anthropic's API.</p>
+    <h3>SETTINGS</h3>
+    <p>All keys stored only in your browser's localStorage — never in the repo or anywhere else.</p>
+
+    <p style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Anthropic API Key</p>
     <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
-    <p style="font-size:11px;color:var(--muted);margin-top:-4px;margin-bottom:14px">Get a key at <strong style="color:var(--gold)">console.anthropic.com</strong> → API Keys</p>
+    <p style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:16px">Get one at <strong style="color:var(--gold)">console.anthropic.com</strong> → API Keys</p>
+
+    <p style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">JSONBin Master Key <span style="color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">(for cross-device sync)</span></p>
+    <input type="password" id="jsonbinKeyInput" placeholder="$2a$10$...">
+
+    <p style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;margin-top:4px">JSONBin Bin ID</p>
+    <input type="text" id="jsonbinBinInput" placeholder="65f3a2b1...">
+    <p style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:16px">Create a bin at <strong style="color:var(--gold)">jsonbin.io</strong> with <code style="color:var(--text)">{"songs":[],"covers":[]}</code></p>
+
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeApiModal()">Cancel</button>
-      <button class="modal-save" onclick="saveApiKey()">Save Key</button>
+      <button class="modal-save" onclick="saveApiKey()">Save Settings</button>
     </div>
   </div>
 </div>
@@ -690,6 +704,8 @@ textarea.chat-input::placeholder{color:var(--muted);}
 <script>
 // ─── State ────────────────────────────────────────────────────────
 let apiKey = localStorage.getItem('fretboard_api_key') || '';
+let jsonbinKey = localStorage.getItem('fretboard_jsonbin_key') || '';
+let jsonbinBin = localStorage.getItem('fretboard_jsonbin_bin') || '';
 
 // Restore session from localStorage
 const _sess = JSON.parse(localStorage.getItem('fretboard_session') || '{}');
@@ -780,14 +796,85 @@ updateApiDot();
 
 function openApiModal(){
   document.getElementById('apiKeyInput').value=apiKey;
+  document.getElementById('jsonbinKeyInput').value=jsonbinKey;
+  document.getElementById('jsonbinBinInput').value=jsonbinBin;
   document.getElementById('apiModal').classList.add('open');
 }
 function closeApiModal(){document.getElementById('apiModal').classList.remove('open');}
 function saveApiKey(){
   apiKey=document.getElementById('apiKeyInput').value.trim();
+  jsonbinKey=document.getElementById('jsonbinKeyInput').value.trim();
+  jsonbinBin=document.getElementById('jsonbinBinInput').value.trim();
   localStorage.setItem('fretboard_api_key',apiKey);
+  localStorage.setItem('fretboard_jsonbin_key',jsonbinKey);
+  localStorage.setItem('fretboard_jsonbin_bin',jsonbinBin);
   updateApiDot();
+  updateSyncDot();
   closeApiModal();
+  if(jsonbinKey&&jsonbinBin) pullFromCloud();
+}
+
+// ─── JSONBin Sync ─────────────────────────────────────────────────
+function updateSyncDot(){
+  const dot=document.getElementById('syncDot');
+  const lbl=document.getElementById('syncLabel');
+  if(jsonbinKey&&jsonbinBin){dot.className='dot ok';lbl.textContent='☁ Sync';}
+  else{dot.className='dot';lbl.textContent='☁ Sync';}
+}
+updateSyncDot();
+
+async function pushToCloud(){
+  if(!jsonbinKey||!jsonbinBin)return;
+  const songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
+  const covers=JSON.parse(localStorage.getItem('fretboard_covers')||'[]');
+  try{
+    await fetch(`https://api.jsonbin.io/v3/b/${jsonbinBin}`,{
+      method:'PUT',
+      headers:{
+        'Content-Type':'application/json',
+        'X-Master-Key':jsonbinKey
+      },
+      body:JSON.stringify({songs,covers})
+    });
+    setSyncStatus('✓ Synced',false);
+  }catch(e){
+    setSyncStatus('Sync failed',true);
+  }
+}
+
+async function pullFromCloud(){
+  if(!jsonbinKey||!jsonbinBin)return;
+  setSyncStatus('Syncing...',false);
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${jsonbinBin}/latest`,{
+      headers:{'X-Master-Key':jsonbinKey}
+    });
+    const data=await res.json();
+    const cloud=data.record;
+    if(cloud.songs) localStorage.setItem('fretboard_songs',JSON.stringify(cloud.songs));
+    if(cloud.covers){
+      localStorage.setItem('fretboard_covers',JSON.stringify(cloud.covers));
+      renderCovers();
+    }
+    renderLibrary();
+    setSyncStatus('✓ Pulled',false);
+  }catch(e){
+    setSyncStatus('Sync failed',true);
+  }
+}
+
+async function manualSync(){
+  if(!jsonbinKey||!jsonbinBin){openApiModal();return;}
+  await pushToCloud();
+  await pullFromCloud();
+}
+
+function setSyncStatus(msg,isError){
+  const lbl=document.getElementById('syncLabel');
+  lbl.textContent='☁ '+msg;
+  if(isError) lbl.style.color='var(--rust)';
+  else lbl.style.color='';
+  setTimeout(()=>{lbl.textContent='☁ Sync';lbl.style.color='';},3000);
 }
 
 async function callClaude(system, messages, maxTokens=1200){
@@ -1020,6 +1107,7 @@ function saveSong(){
   };
   songs.unshift(song);
   localStorage.setItem('fretboard_songs',JSON.stringify(songs));
+  pushToCloud();
   alert(`"${songTitle}" saved to your library!`);
 }
 
@@ -1105,6 +1193,7 @@ function deleteSong(id){
   let songs=JSON.parse(localStorage.getItem('fretboard_songs')||'[]');
   songs=songs.filter(s=>s.id!==id);
   localStorage.setItem('fretboard_songs',JSON.stringify(songs));
+  pushToCloud();
   renderLibrary();
 }
 
@@ -1218,6 +1307,7 @@ function saveCover(){
   }
   covers.unshift({...currentCoverData,savedAt:Date.now()});
   localStorage.setItem('fretboard_covers',JSON.stringify(covers));
+  pushToCloud();
   renderCovers();
   alert(`"${currentCoverData.title}" saved to your cover list!`);
 }
@@ -1305,6 +1395,8 @@ renderCovers();
       }
     }
   }
+  // Pull from cloud if JSONBin is configured
+  if(jsonbinKey&&jsonbinBin) pullFromCloud();
 })();
 
 </body>
