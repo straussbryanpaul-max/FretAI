@@ -423,6 +423,7 @@ let sections=_s.sections||[];
 let songTitle=_s.songTitle||'Untitled Song';
 let isLoading=false,coverData=null,viewingSong=null;
 let pendingSection=null; // section awaiting commit
+let currentSongId=null; // tracks if editing a saved song
 
 function persist(){localStorage.setItem('fa_sess',JSON.stringify({chatHist,sections,songTitle}));}
 
@@ -965,7 +966,7 @@ function editTitle(){
 
 function newSong(){
   if(sections.length&&!confirm('Start a new song? Unsaved work will be lost.'))return;
-  songTitle='Untitled Song';sections=[];chatHist=[];persist();
+  songTitle='Untitled Song';sections=[];chatHist=[];currentSongId=null;persist();
   document.getElementById('stitle').textContent=songTitle;renderSheet();
   document.getElementById('msgs').innerHTML=`<div class="msg ai"><div class="av">🎸</div><div class="bub">Fresh start! What mood or style are we going for?</div></div>`;
   document.getElementById('qarea').style.display='flex';
@@ -974,8 +975,20 @@ function newSong(){
 
 function saveSong(){
   if(!sections.length){alert('Write and approve some sections first!');return;}
-  const songs=JSON.parse(localStorage.getItem('fa_songs')||'[]');
-  songs.unshift({id:Date.now(),title:songTitle,sections,date:new Date().toLocaleDateString()});
+  let songs=JSON.parse(localStorage.getItem('fa_songs')||'[]');
+  if(currentSongId){
+    // overwrite existing
+    const idx=songs.findIndex(s=>s.id===currentSongId);
+    if(idx>=0){
+      songs[idx]={...songs[idx],title:songTitle,sections,date:new Date().toLocaleDateString()};
+      localStorage.setItem('fa_songs',JSON.stringify(songs));
+      pushCloud();alert(`"${songTitle}" updated!`);return;
+    }
+  }
+  // new song
+  const song={id:Date.now(),title:songTitle,sections,date:new Date().toLocaleDateString()};
+  currentSongId=song.id;
+  songs.unshift(song);
   localStorage.setItem('fa_songs',JSON.stringify(songs));
   pushCloud();alert(`"${songTitle}" saved!`);
 }
@@ -1019,7 +1032,9 @@ function expSong(id){const s=getSong(id);if(s)doExport(s.title,s.sections);}
 
 function loadSong(id){
   const song=getSong(id);if(!song)return;
-  songTitle=song.title;sections=[...song.sections];chatHist=[];persist();
+  songTitle=song.title;sections=[...song.sections];chatHist=[];
+  currentSongId=song.id;
+  persist();
   document.getElementById('stitle').textContent=songTitle;renderSheet();sv('write');
   addMsg('ai',`Loaded <strong>${songTitle}</strong>. Let's keep working on it!`);
 }
