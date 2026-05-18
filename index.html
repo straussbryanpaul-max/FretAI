@@ -386,6 +386,12 @@ function initLayout(){
 initLayout();
 window.addEventListener('resize',initLayout);
 
+// ── Migrate old localStorage key names ───────────────────────────
+(function migrate(){
+  const map={'fretboard_api_key':'fa_ak','fretboard_jsonbin_key':'fa_jk','fretboard_jsonbin_bin':'fa_jb','fretboard_songs':'fa_songs','fretboard_covers':'fa_covers','fretboard_session':'fa_sess'};
+  Object.entries(map).forEach(([o,n])=>{const v=localStorage.getItem(o);if(v&&!localStorage.getItem(n))localStorage.setItem(n,v);});
+})();
+
 // ── State ────────────────────────────────────────────────────────
 let apiKey=localStorage.getItem('fa_ak')||'';
 let jbKey=localStorage.getItem('fa_jk')||'';
