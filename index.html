@@ -514,13 +514,19 @@ async function pullCloud(){
   try{
     const res=await fetch(`https://api.jsonbin.io/v3/b/${jbBin}/latest`,{headers:{'X-Master-Key':jbKey}});
     const d=await res.json(),c=d.record;
-    if(c.songs)localStorage.setItem('fa_songs',JSON.stringify(c.songs));
-    if(c.covers){localStorage.setItem('fa_covers',JSON.stringify(c.covers));renderCovers();}
+    // Use Array.isArray so empty arrays [] are respected (fixes delete sync)
+    if(Array.isArray(c.songs))localStorage.setItem('fa_songs',JSON.stringify(c.songs));
+    if(Array.isArray(c.covers)){localStorage.setItem('fa_covers',JSON.stringify(c.covers));renderCovers();}
     renderLib();setSyncSt('✓ Pulled',false);
   }catch(e){setSyncSt('Failed',true);}
 }
 async function manualSync(){if(!jbKey||!jbBin){openSettings();return;}await pushCloud();await pullCloud();}
 function setSyncSt(m,e){const l=document.getElementById('syncLbl');l.textContent='☁ '+m;l.style.color=e?'var(--rust)':'';setTimeout(()=>{l.textContent='☁ Sync';l.style.color='';},3000);}
+
+// Auto-pull when tab becomes visible (switching back from another app)
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&jbKey&&jbBin) pullCloud();
+});
 
 // ── Claude API ────────────────────────────────────────────────────
 async function callClaude(sys,msgs,mt=1400){
