@@ -843,7 +843,12 @@ Current song: title="${songTitle}", sections=${JSON.stringify(sections)}`;
     const full=await callClaude(sys,chatHist);
     chatHist.push({role:'assistant',content:full});
     const parsed=parseJSON(full);
-    const prose=full.replace(/```json[\s\S]*?```/,'').trim();
+    const prose=full
+      .replace(/```json[\s\S]*?```/g,'')  // strip JSON blocks
+      .replace(/```[\s\S]*?```/g,'')       // strip any other code blocks
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>') // bold
+      .replace(/\*(.*?)\*/g,'<em>$1</em>') // italic
+      .trim();
     const chords=parsed?.chords||[];
 
     if(parsed?.title&&parsed.title!=='Untitled Song'&&parsed.title!==null){
