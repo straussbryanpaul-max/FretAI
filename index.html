@@ -1242,116 +1242,105 @@ renderCovers();
 
 // ══ PRACTICE ══════════════════════════════════════════════════════
 
-// Scale patterns (intervals from root, per string starting low E)
-const SCALE_DATA={
-  pentatonic_minor:{name:'Pentatonic Minor',desc:'The foundation of blues and rock. 5 positions cover the entire neck. Root notes marked in gold — learn all 5 to unlock the whole fretboard.',color:'#d4a843',
-    positions:[
-      {name:'Box 1',strings:['X-5-8','X-5-8','X-5-7','X-5-7','X-5-8','X-5-8']},
-      {name:'Box 2',strings:['X-8-10','X-8-10','X-7-9','X-7-9','X-8-10','X-8-10']},
-      {name:'Box 3',strings:['X-10-12','X-10-12','X-9-12','X-9-12','X-10-12','X-10-12']},
-      {name:'Box 4',strings:['X-12-15','X-12-13','X-12-14','X-12-14','X-12-15','X-12-15']},
-      {name:'Box 5',strings:['X-3-5','X-3-5','X-2-5','X-2-5','X-3-5','X-3-5']},
-    ]},
-  pentatonic_major:{name:'Pentatonic Major',desc:'Bright and country-flavoured. The same 5 box shapes as minor pentatonic, shifted by 3 frets. Great for country, pop, and upbeat rock.',color:'#f0c060',
-    positions:[
-      {name:'Box 1',strings:['X-2-5','X-2-4','X-2-4','X-1-4','X-2-4','X-2-5']},
-      {name:'Box 2',strings:['X-4-7','X-4-7','X-4-6','X-4-6','X-4-7','X-4-7']},
-      {name:'Box 3',strings:['X-7-9','X-7-9','X-6-9','X-6-9','X-7-9','X-7-9']},
-      {name:'Box 4',strings:['X-9-12','X-9-11','X-9-11','X-9-11','X-9-12','X-9-12']},
-      {name:'Box 5',strings:['X-12-14','X-11-14','X-11-13','X-11-13','X-11-14','X-12-14']},
-    ]},
-  blues:{name:'Blues Scale',desc:'Pentatonic minor with an added ♭5 "blue note". That one extra note is where the grit and soul lives. Learn Box 1 first.',color:'#b8472a',
-    positions:[
-      {name:'Box 1',strings:['X-5-6-8','X-5-6-8','X-5-7','X-5-7','X-5-8','X-5-8']},
-      {name:'Box 2',strings:['X-8-9-10','X-8-9-10','X-7-9','X-7-9','X-8-10','X-8-10']},
-      {name:'Box 3',strings:['X-10-11-12','X-10-11-12','X-9-12','X-9-12','X-10-12','X-10-12']},
-    ]},
-  natural_minor:{name:'Natural Minor (Aeolian)',desc:'The full 7-note minor scale. More melodic than pentatonic, great for expressive lead playing and darker moods.',color:'#3d6e8f',
-    positions:[
-      {name:'Pos 1',strings:['X-5-7-8','X-5-6-8','X-5-7','X-5-7','X-5-7-8','X-5-7-8']},
-      {name:'Pos 2',strings:['X-7-8-10','X-8-10','X-7-9-10','X-7-9-10','X-8-10','X-7-8-10']},
-      {name:'Pos 3',strings:['X-10-12','X-10-12','X-9-10-12','X-10-12','X-10-12','X-10-12']},
-    ]},
-  major:{name:'Major (Ionian)',desc:'Bright, happy, the foundation of Western music. Great for pop, country, and melodic rock solos.',color:'#3a7d5a',
-    positions:[
-      {name:'Pos 1',strings:['X-3-5-7','X-3-5-7','X-4-5-7','X-4-5-7','X-3-5-7','X-3-5-7']},
-      {name:'Pos 2',strings:['X-5-7-8','X-5-7-8','X-5-7','X-5-7-8','X-5-7-8','X-5-7-8']},
-      {name:'Pos 3',strings:['X-7-8-10','X-8-10','X-7-9-10','X-7-9-10','X-8-10','X-7-8-10']},
-    ]},
-  dorian:{name:'Dorian Mode',desc:'Minor with a raised 6th — slightly brighter than natural minor. The sound of Santana, Miles Davis, and funk. Works great over minor chords.',color:'#6b5fa8',
-    positions:[
-      {name:'Pos 1',strings:['X-5-7-8','X-5-7','X-4-5-7','X-5-7','X-5-7','X-5-7-8']},
-      {name:'Pos 2',strings:['X-7-8-10','X-7-9-10','X-7-9','X-7-9-10','X-7-9-10','X-7-8-10']},
-    ]},
-  mixolydian:{name:'Mixolydian Mode',desc:'Major scale with a flattened 7th. The sound of classic rock, blues-rock, and Southern rock. Think Hendrix, Allman Brothers, and Clapton.',color:'#8f5a3d',
-    positions:[
-      {name:'Pos 1',strings:['X-3-5-7','X-3-5-6','X-3-5-7','X-3-5-7','X-3-5-6','X-3-5-7']},
-      {name:'Pos 2',strings:['X-5-7-8','X-5-6-8','X-5-7-8','X-5-7-8','X-5-6-8','X-5-7-8']},
-    ]},
+// ══ PRACTICE — SCALES ════════════════════════════════════════════
+// Chromatic semitone values (C=0)
+const NOTE_MAP={'A':9,'A#/Bb':10,'B':11,'C':0,'C#/Db':1,'D':2,'D#/Eb':3,'E':4,'F':5,'F#/Gb':6,'G':7,'G#/Ab':8};
+// Open string notes low E to high e
+const OPEN_STRINGS=[4,9,2,7,11,4]; // E A D G B e
+
+const SCALE_INTERVALS={
+  pentatonic_minor:[0,3,5,7,10],
+  pentatonic_major:[0,2,4,7,9],
+  blues:[0,3,5,6,7,10],
+  natural_minor:[0,2,3,5,7,8,10],
+  major:[0,2,4,5,7,9,11],
+  dorian:[0,2,3,5,7,9,10],
+  mixolydian:[0,2,4,5,7,9,10],
 };
 
-const NOTES=['A','A#/Bb','B','C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab'];
+const SCALE_INFO={
+  pentatonic_minor:{name:'Pentatonic Minor',desc:'Foundation of blues and rock. 5 boxes cover the whole neck. Filled dot = root note.'},
+  pentatonic_major:{name:'Pentatonic Major',desc:'Bright and country-flavoured. 5 box shapes. Filled dot = root note.'},
+  blues:{name:'Blues Scale',desc:'Pentatonic minor + ♭5 blue note. Filled dot = root note.'},
+  natural_minor:{name:'Natural Minor (Aeolian)',desc:'Full 7-note minor scale. Filled dot = root note.'},
+  major:{name:'Major (Ionian)',desc:'Bright, happy, foundation of Western music. Filled dot = root note.'},
+  dorian:{name:'Dorian Mode',desc:'Minor with raised 6th. Santana, Miles Davis, funk. Filled dot = root note.'},
+  mixolydian:{name:'Mixolydian Mode',desc:'Major with flat 7th. Blues-rock, Hendrix, Allman Brothers. Filled dot = root note.'},
+};
 
-function drawFretboard(stringPatterns,color){
-  const numStrings=6,frets=4,sw=26,sh=16,px=28,py=14;
-  const w=sw*frets+px*2,h=sh*(numStrings-1)+py*2+10;
+// Box positions: fret offsets relative to root on low E string
+const SCALE_BOXES={
+  pentatonic_minor:[{name:'Box 1',offset:0,span:4},{name:'Box 2',offset:3,span:4},{name:'Box 3',offset:5,span:4},{name:'Box 4',offset:7,span:4},{name:'Box 5',offset:10,span:4}],
+  pentatonic_major:[{name:'Box 1',offset:0,span:4},{name:'Box 2',offset:2,span:4},{name:'Box 3',offset:4,span:4},{name:'Box 4',offset:7,span:4},{name:'Box 5',offset:9,span:4}],
+  blues:[{name:'Box 1',offset:0,span:4},{name:'Box 2',offset:3,span:4},{name:'Box 3',offset:5,span:4}],
+  natural_minor:[{name:'Pos 1',offset:0,span:4},{name:'Pos 2',offset:2,span:4},{name:'Pos 3',offset:5,span:4},{name:'Pos 4',offset:7,span:4}],
+  major:[{name:'Pos 1',offset:0,span:4},{name:'Pos 2',offset:2,span:4},{name:'Pos 3',offset:4,span:4},{name:'Pos 4',offset:7,span:4}],
+  dorian:[{name:'Pos 1',offset:0,span:4},{name:'Pos 2',offset:2,span:4},{name:'Pos 3',offset:5,span:4},{name:'Pos 4',offset:7,span:4}],
+  mixolydian:[{name:'Pos 1',offset:0,span:4},{name:'Pos 2',offset:2,span:4},{name:'Pos 3',offset:4,span:4},{name:'Pos 4',offset:7,span:4}],
+};
 
-  // Find the min fret to offset display (so Box 2, 3 etc show correctly)
-  const allFrets=stringPatterns.flatMap(p=>p.replace(/^X-/,'').split('-').map(Number).filter(f=>f>0));
-  const minFret=allFrets.length?Math.min(...allFrets):1;
-  const offset=minFret>2?minFret-1:0;
+function getScaleDots(rootNote, intervals, startFret, endFret){
+  const root=NOTE_MAP[rootNote];
+  const dots=[];
+  OPEN_STRINGS.forEach((open,si)=>{
+    for(let fret=startFret;fret<=endFret;fret++){
+      const interval=(open+fret-root+120)%12;
+      if(intervals.includes(interval)) dots.push({si,fret,isRoot:interval===0});
+    }
+  });
+  return dots;
+}
 
+function drawScaleDiagram(dots, startFret, span, color){
+  const strings=6,sw=26,sh=16,px=28,py=14;
+  const w=sw*(span+1)+px*2, h=sh*(strings-1)+py*2+10;
   let s=`<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">`;
-
-  // Nut or position marker
-  if(offset===0){
-    s+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${py+sh*(numStrings-1)}" stroke="${color}" stroke-width="2.5"/>`;
+  if(startFret===0){
+    s+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${py+sh*(strings-1)}" stroke="${color}" stroke-width="3"/>`;
   } else {
-    s+=`<text x="${px-4}" y="${py+sh*2.5}" text-anchor="end" fill="#556070" font-size="8" font-family="monospace">${offset+1}fr</text>`;
+    s+=`<text x="${px-4}" y="${py+sh*2.5}" text-anchor="end" fill="#556070" font-size="8" font-family="monospace">${startFret}fr</text>`;
   }
-
-  // Fret lines (vertical)
-  for(let f=0;f<=frets;f++){
-    const x=px+f*sw;
-    s+=`<line x1="${x}" y1="${py}" x2="${x}" y2="${py+sh*(numStrings-1)}" stroke="#252d3d" stroke-width=".8"/>`;
-  }
-  // String lines (horizontal)
-  for(let st=0;st<numStrings;st++){
-    const y=py+st*sh;
-    s+=`<line x1="${px}" y1="${y}" x2="${px+sw*frets}" y2="${y}" stroke="#2e3848" stroke-width=".8"/>`;
-  }
-
-  // Dots
-  stringPatterns.forEach((pattern,si)=>{
-    const fretNums=pattern.replace(/^X-/,'').split('-').map(Number);
-    fretNums.forEach((f,fi)=>{
-      if(f<1)return;
-      const adjF=f-offset;
-      if(adjF<1||adjF>frets)return;
-      const x=px+(adjF-.5)*sw,y=py+si*sh;
-      const isRoot=fi===0;
-      s+=`<circle cx="${x}" cy="${y}" r="5" fill="${isRoot?color:'#1e2430'}" stroke="${color}" stroke-width="1.5"/>`;
-      if(isRoot)s+=`<text x="${x}" y="${y+4}" text-anchor="middle" fill="#080a0e" font-size="7" font-family="monospace" font-weight="bold">R</text>`;
-    });
+  for(let f=0;f<=span+1;f++){const x=px+f*sw;s+=`<line x1="${x}" y1="${py}" x2="${x}" y2="${py+sh*(strings-1)}" stroke="#252d3d" stroke-width=".8"/>`;}
+  for(let st=0;st<strings;st++){const y=py+st*sh;s+=`<line x1="${px}" y1="${y}" x2="${px+sw*(span+1)}" y2="${y}" stroke="#2e3848" stroke-width=".8"/>`;}
+  dots.forEach(({si,fret,isRoot})=>{
+    const adjF=fret-startFret;
+    if(adjF<0||adjF>span)return;
+    const x=px+(adjF+0.5)*sw, y=py+si*sh;
+    if(isRoot){
+      s+=`<circle cx="${x}" cy="${y}" r="6" fill="${color}"/>`;
+    } else {
+      s+=`<circle cx="${x}" cy="${y}" r="5" fill="#1e2430" stroke="${color}" stroke-width="1.5"/>`;
+    }
   });
   return s+`</svg>`;
 }
 
 function renderScale(){
-  const root=document.getElementById('rootSel').value;
+  const rootNote=document.getElementById('rootSel').value;
   const scaleKey=document.getElementById('scaleSel').value;
-  const scale=SCALE_DATA[scaleKey];
-  if(!scale)return;
+  const info=SCALE_INFO[scaleKey];
+  const intervals=SCALE_INTERVALS[scaleKey];
+  const boxes=SCALE_BOXES[scaleKey];
+  if(!info||!intervals||!boxes)return;
+
+  const root=NOTE_MAP[rootNote];
+  // Find fret of root on low E string (fret 0-11)
+  const lowERootFret=(root-OPEN_STRINGS[0]+12)%12;
+  const color='#d4a843';
+
   document.getElementById('scaleDisplay').innerHTML=`
     <div class="scale-card">
-      <div class="scale-title" style="color:${scale.color}">${root} ${scale.name}</div>
-      <div class="scale-desc">${scale.desc}</div>
+      <div class="scale-title" style="color:${color}">${rootNote} ${info.name}</div>
+      <div class="scale-desc">${info.desc}</div>
       <div class="scale-positions">
-        ${scale.positions.map(pos=>`
-          <div class="fboard-wrap">
-            <div class="fboard-pos">${pos.name}</div>
-            ${drawFretboard(pos.strings,scale.color)}
-          </div>`).join('')}
+        ${boxes.map(box=>{
+          const startFret=(lowERootFret+box.offset)%12;
+          const dots=getScaleDots(rootNote,intervals,startFret,startFret+box.span);
+          return `<div class="fboard-wrap">
+            <div class="fboard-pos">${box.name}</div>
+            ${drawScaleDiagram(dots,startFret,box.span,color)}
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
 }
