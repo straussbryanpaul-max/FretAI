@@ -126,6 +126,23 @@ textarea.ci::placeholder{color:var(--muted);}
 .sblock-tab{padding:10px;font-family:var(--fm);font-size:11px;color:#a8c4a8;line-height:1.6;background:#0d1a0d;overflow-x:auto;white-space:pre;border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;}
 .sblock-lyrics{padding:8px 10px;font-size:13px;color:var(--text);line-height:1.75;white-space:pre-wrap;font-style:italic;}
 .sblock-notes{padding:6px 10px;font-family:var(--fm);font-size:11px;color:var(--muted);line-height:1.6;border-bottom:1px solid var(--border);background:var(--bg);}
+/* SMART TAB EDITOR */
+.tab-editor{background:#0a140a;border:1px solid #1e3a1e;border-radius:3px;padding:10px 12px;margin:6px 0;}
+.tab-editor-toolbar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #1e3a1e;}
+.te-btn{font-family:var(--fm);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 9px;border-radius:2px;cursor:pointer;border:1px solid #2a4a2a;color:#6b9a6b;background:transparent;transition:all .12s;white-space:nowrap;}
+.te-btn:hover,.te-btn:active{border-color:#a8c4a8;color:#a8c4a8;background:#0d1a0d;}
+.te-btn.primary{border-color:#3a7d5a;color:#3a7d5a;}
+.te-btn.primary:hover{background:#3a7d5a;color:#fff;}
+.te-btn.warn{border-color:#6b3a2a;color:#9a5a3a;}
+.te-btn.warn:hover{background:#6b3a2a;color:#fff;}
+.tab-string-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.tab-string-label{font-family:var(--fm);font-size:11px;font-weight:700;color:#d4a843;width:12px;flex-shrink:0;text-align:center;}
+.tab-string-input{flex:1;background:transparent;border:none;border-bottom:1px solid #1e3a1e;color:#a8c4a8;font-family:var(--fm);font-size:12px;padding:3px 4px;outline:none;letter-spacing:1px;transition:border-color .12s;}
+.tab-string-input:focus{border-bottom-color:#3a7d5a;}
+.tab-string-input::placeholder{color:#2a4a2a;}
+.tab-shift-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid #1e3a1e;}
+.tab-shift-label{font-family:var(--fm);font-size:9px;color:#556070;letter-spacing:1px;text-transform:uppercase;}
+
 .nolyr{color:var(--muted);font-style:normal;font-size:11px;font-family:var(--fm);}
 
 /* EDIT BAR */
@@ -543,8 +560,19 @@ textarea.ci::placeholder{color:var(--muted);}
       <input type="text" id="addSecPattern" placeholder="e.g. D DU UDU">
     </div>
     <div id="addSecTabFields" style="display:none">
-      <span class="mlabel">Tab</span>
-      <textarea id="addSecTab" placeholder="e|----------|\nB|----------|\nG|----------|\nD|----------|\nA|----------|\nE|----------|" style="font-family:var(--fm);font-size:11px;color:#a8c4a8;background:#0d1a0d;min-height:120px;"></textarea>
+      <span class="mlabel">Tab — one string per row</span>
+      <div style="background:#0a140a;border:1px solid #1e3a1e;border-radius:3px;padding:10px 12px;margin-bottom:12px;">
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;">
+          <button type="button" class="te-btn primary" onclick="modalDupeMeasure()">⧉ Dupe Measure</button>
+          <button type="button" class="te-btn" onclick="modalAddBar()">+ Bar</button>
+          <button type="button" class="te-btn warn" onclick="modalClear()">✕ Clear</button>
+        </div>
+        ${['e','B','G','D','A','E'].map((n,si)=>`
+          <div class="tab-string-row">
+            <span class="tab-string-label">${n}</span>
+            <input class="tab-string-input" id="ats_${si}" value="" placeholder="---0---2---" spellcheck="false">
+          </div>`).join('')}
+      </div>
     </div>
     <span class="mlabel">Lyrics (optional)</span>
     <textarea id="addSecLyrics" placeholder="Write lyrics here..."></textarea>
@@ -767,7 +795,7 @@ function openAddSection(type){
   document.getElementById('addSecTabFields').style.display=type==='tab'?'block':'none';
   document.getElementById('addSecChords').value='';
   document.getElementById('addSecPattern').value='';
-  document.getElementById('addSecTab').value='';
+  [0,1,2,3,4,5].forEach(si=>{const inp=document.getElementById('ats_'+si);if(inp)inp.value='';});
   document.getElementById('addSecLyrics').value='';
   document.getElementById('addSecModal').classList.add('open');
 }
@@ -787,12 +815,31 @@ function saveAddSection(){
     const pattern=document.getElementById('addSecPattern').value.trim()||null;
     sec={label,stype:'chords',chords,pattern,lyrics,tab:null};
   }else{
-    const tab=document.getElementById('addSecTab').value.trim()||'';
+    const STRING_NAMES=['e','B','G','D','A','E'];
+    const strings=[0,1,2,3,4,5].map(si=>document.getElementById('ats_'+si)?.value||'');
+    const hasContent=strings.some(s=>s.trim().length>0);
+    let tab='';
+    if(hasContent){
+      const maxLen=Math.max(...strings.map(s=>s.length));
+      const padded=strings.map(s=>s.padEnd(maxLen,'-'));
+      tab=STRING_NAMES.map((name,si)=>`${name}|${padded[si]}|`).join('\n');
+    }
     sec={label,stype:'tab',tab,chords:null,pattern:null,lyrics};
   }
   sections.push(sec);persist();renderSheet();closeAddSection();
   if(window.innerWidth<700)showWPane('sheet');
 }
+
+function modalDupeMeasure(){
+  [0,1,2,3,4,5].forEach(si=>{
+    const inp=document.getElementById('ats_'+si);if(!inp)return;
+    const parts=inp.value.split('|');
+    const last=parts[parts.length-1]||parts[parts.length-2]||'---';
+    inp.value=inp.value+(inp.value.endsWith('|')?'':'-')+last+(last.endsWith('|')?'':'|');
+  });
+}
+function modalAddBar(){[0,1,2,3,4,5].forEach(si=>{const inp=document.getElementById('ats_'+si);if(inp)inp.value+='---|';});}
+function modalClear(){[0,1,2,3,4,5].forEach(si=>{const inp=document.getElementById('ats_'+si);if(inp)inp.value='';});}
 
 // ── Duplicate Section ─────────────────────────────────────────────
 function duplicateSection(i){
@@ -837,11 +884,147 @@ function editChords(i){
 function saveChords(i){const v=document.getElementById('chd_'+i)?.value.trim();if(v)sections[i].chords=v;persist();renderSheet();}
 
 function editTab(i){
-  const el=document.getElementById('sbt_'+i);const orig=sections[i].tab||'';
-  el.innerHTML=`<textarea class="inline-tab" id="tab_${i}" spellcheck="false">${orig}</textarea><div class="edit-acts"><button class="esave" onclick="saveTab(${i})">Save</button><button class="ecancel" onclick="renderSheet()">Cancel</button></div>`;
-  document.getElementById('tab_'+i)?.focus();
+  const el=document.getElementById('sbt_'+i);
+  const orig=sections[i].tab||'';
+
+  // Parse existing tab into 6 string rows
+  // Expected format: lines like "e|---0---2---|" or just raw fret sequences
+  const STRING_NAMES=['e','B','G','D','A','E'];
+  let parsed=['','','','','',''];
+
+  if(orig.trim()){
+    const lines=orig.split('\n');
+    // Try to match labeled lines e.g. "e|---" or "B|---"
+    const labeled=lines.filter(l=>/^[eEBGDAd]\|/.test(l.trim()));
+    if(labeled.length>=2){
+      STRING_NAMES.forEach((name,si)=>{
+        const match=lines.find(l=>l.trim().startsWith(name+'|'));
+        if(match)parsed[si]=match.trim().replace(/^[eEBGDAd]\|/,'').replace(/\|$/,'');
+      });
+    } else {
+      // Raw — just split into 6 lines as best we can
+      lines.slice(0,6).forEach((l,si)=>parsed[si]=l.replace(/^[eEBGDAd]\|?/,'').replace(/\|$/,'').trim());
+    }
+  }
+
+  el.innerHTML=`
+    <div class="tab-editor" id="te_${i}">
+      <div class="tab-editor-toolbar">
+        <button class="te-btn primary" onclick="teDupeMeasure(${i})">⧉ Dupe Measure</button>
+        <button class="te-btn" onclick="teAddBar(${i})">+ Bar</button>
+        <button class="te-btn" onclick="teAddBend(${i})">b Bend</button>
+        <button class="te-btn" onclick="teAddHammer(${i})">h Hammer-on</button>
+        <button class="te-btn" onclick="teAddPullOff(${i})">p Pull-off</button>
+        <button class="te-btn" onclick="teAddSlide(${i})">/ Slide</button>
+        <button class="te-btn warn" onclick="teClear(${i})">✕ Clear</button>
+      </div>
+      ${STRING_NAMES.map((name,si)=>`
+        <div class="tab-string-row">
+          <span class="tab-string-label">${name}</span>
+          <input class="tab-string-input" id="ts_${i}_${si}" value="${parsed[si]}" placeholder="---0---2---3---" spellcheck="false">
+        </div>`).join('')}
+      <div class="tab-shift-row">
+        <span class="tab-shift-label">Shift fret:</span>
+        <button class="te-btn" onclick="teShift(${i},-1)">− 1</button>
+        <button class="te-btn" onclick="teShift(${i},1)">+ 1</button>
+        <button class="te-btn" onclick="teShift(${i},-12)">− Oct</button>
+        <button class="te-btn" onclick="teShift(${i},12)">+ Oct</button>
+      </div>
+    </div>
+    <div class="edit-acts" style="margin-top:6px">
+      <button class="esave" onclick="saveTab(${i})">Save</button>
+      <button class="ecancel" onclick="renderSheet()">Cancel</button>
+    </div>`;
+
+  // Focus first string
+  document.getElementById(`ts_${i}_0`)?.focus();
 }
-function saveTab(i){const v=document.getElementById('tab_'+i)?.value;if(v!==undefined)sections[i].tab=v;persist();renderSheet();}
+
+function getTabStrings(i){
+  return [0,1,2,3,4,5].map(si=>document.getElementById(`ts_${i}_${si}`)?.value||'');
+}
+
+function setTabStrings(i,vals){
+  vals.forEach((v,si)=>{
+    const inp=document.getElementById(`ts_${i}_${si}`);
+    if(inp)inp.value=v;
+  });
+}
+
+function teDupeMeasure(i){
+  const strings=getTabStrings(i);
+  // Find last measure (after last |) and append it again
+  setTabStrings(i,strings.map(s=>{
+    // Extract last measure
+    const parts=s.split('|');
+    const last=parts[parts.length-1]||parts[parts.length-2]||'---';
+    const clean=last.replace(/^-+$/,'---') || '---';
+    return s+(s.endsWith('|')?'':'-')+clean+(clean.endsWith('|')?'':'|');
+  }));
+}
+
+function teAddBar(i){
+  setTabStrings(i,getTabStrings(i).map(s=>s+'---|'));
+}
+
+function teAddBend(i){
+  // Insert bend notation at cursor — just append b to focused string
+  [0,1,2,3,4,5].forEach(si=>{
+    const inp=document.getElementById(`ts_${i}_${si}`);
+    if(inp===document.activeElement)inp.value+='-b-';
+  });
+}
+
+function teAddHammer(i){
+  [0,1,2,3,4,5].forEach(si=>{
+    const inp=document.getElementById(`ts_${i}_${si}`);
+    if(inp===document.activeElement)inp.value+='h';
+  });
+}
+
+function teAddPullOff(i){
+  [0,1,2,3,4,5].forEach(si=>{
+    const inp=document.getElementById(`ts_${i}_${si}`);
+    if(inp===document.activeElement)inp.value+='p';
+  });
+}
+
+function teAddSlide(i){
+  [0,1,2,3,4,5].forEach(si=>{
+    const inp=document.getElementById(`ts_${i}_${si}`);
+    if(inp===document.activeElement)inp.value+='/';
+  });
+}
+
+function teClear(i){
+  if(!confirm('Clear all strings?'))return;
+  setTabStrings(i,['','','','','','']);
+  document.getElementById(`ts_${i}_0`)?.focus();
+}
+
+function teShift(i,delta){
+  setTabStrings(i,getTabStrings(i).map(s=>{
+    // Replace all fret numbers, shifting each by delta
+    return s.replace(/\d+/g,n=>{
+      const shifted=parseInt(n)+delta;
+      return Math.max(0,Math.min(24,shifted)).toString();
+    });
+  }));
+}
+
+function saveTab(i){
+  // Reconstruct tab from 6 string rows
+  const STRING_NAMES=['e','B','G','D','A','E'];
+  const strings=getTabStrings(i);
+  // Check if there's anything to save
+  const hasContent=strings.some(s=>s.trim().length>0);
+  if(!hasContent){sections[i].tab='';persist();renderSheet();return;}
+  // Pad all strings to same length
+  const maxLen=Math.max(...strings.map(s=>s.length));
+  const padded=strings.map(s=>s.padEnd(maxLen,'-'));
+  sections[i].tab=STRING_NAMES.map((name,si)=>`${name}|${padded[si]}|`).join('\n');
+  persist();renderSheet();
+}
 
 function editLyrics(i){
   const block=document.getElementById('sb_'+i);
