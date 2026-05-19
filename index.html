@@ -292,11 +292,11 @@ textarea.ci::placeholder{color:var(--muted);}
   .tbtn:hover:not(.active){border-color:var(--gold);color:var(--gold);}
 
   /* Write: side by side */
-  #writeView{flex-direction:row!important;}
-  .wtabs{display:none!important;}
-  .wpanes{flex-direction:row!important;flex:1;overflow:hidden;}
-  .cpane,.cpane.hidden{display:flex!important;flex-direction:column;flex:1;border-right:1px solid var(--border);}
-  .spane,.spane.hidden{display:flex!important;flex-direction:column;width:340px;flex-shrink:0;}
+  #writeView{flex-direction:row;}
+  .wtabs{display:none;}
+  .wpanes{flex-direction:row;flex:1;overflow:hidden;}
+  .cpane{flex:1;border-right:1px solid var(--border);}
+  .spane{width:340px;flex-shrink:0;display:flex;flex-direction:column;}
 
   /* Cover: side by side */
   #coverView .stabs{display:none!important;}
@@ -368,7 +368,7 @@ textarea.ci::placeholder{color:var(--muted);}
         </div>
       </div>
 
-      <div class="spane hidden" id="sheetPane">
+      <div class="spane" id="sheetPane">
         <div class="shead">
           <h2 class="stitle" id="stitle" onclick="editTitle()">Untitled Song</h2>
           <div class="sacts">
@@ -560,7 +560,18 @@ textarea.ci::placeholder{color:var(--muted);}
 function initLayout(){
   const d=window.innerWidth>=700;
   document.getElementById('dtabs').style.display=d?'flex':'none';
-  if(d){document.getElementById('chatPane').classList.remove('hidden');document.getElementById('sheetPane').classList.remove('hidden');}
+  const cp=document.getElementById('chatPane');
+  const sp=document.getElementById('sheetPane');
+  if(d){
+    // Desktop: always show both side by side
+    cp.classList.remove('hidden');
+    sp.classList.remove('hidden');
+  } else {
+    // Mobile: show chat, hide sheet (unless sheet tab is active)
+    const sheetTabActive=document.getElementById('sheetTab')?.classList.contains('active');
+    if(sheetTabActive){cp.classList.add('hidden');sp.classList.remove('hidden');}
+    else{cp.classList.remove('hidden');sp.classList.add('hidden');}
+  }
 }
 initLayout();window.addEventListener('resize',initLayout);
 
