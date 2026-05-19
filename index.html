@@ -284,6 +284,13 @@ textarea.ci::placeholder{color:var(--muted);}
 .tdot:nth-child(2){animation-delay:.2s;}.tdot:nth-child(3){animation-delay:.4s;}
 @keyframes blink{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
 
+
+/* RESIZABLE DIVIDER */
+.divider{display:none;width:5px;flex-shrink:0;background:var(--border);cursor:col-resize;transition:background .15s;position:relative;z-index:10;}
+.divider:hover,.divider.dragging{background:var(--gold);}
+.divider::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:3px;height:32px;border-radius:2px;background:var(--border2);}
+.divider:hover::after,.divider.dragging::after{background:var(--bg);}
+
 /* DESKTOP */
 @media(min-width:700px){
   .bnav{display:none;}
@@ -292,12 +299,13 @@ textarea.ci::placeholder{color:var(--muted);}
   .tbtn.active{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:700;}
   .tbtn:hover:not(.active){border-color:var(--gold);color:var(--gold);}
 
-  /* Write: side by side */
+  /* Write: side by side with draggable divider */
   #writeView{flex-direction:row;}
   .wtabs{display:none;}
   .wpanes{flex-direction:row;}
-  .cpane{flex:1;border-right:1px solid var(--border);}
-  .spane{width:340px;flex:none;}
+  .cpane{flex:1;min-width:200px;}
+  .spane{width:340px;flex:none;min-width:180px;}
+  .divider{display:block;}
 
   /* Cover: side by side */
   #coverView .stabs{display:none!important;}
@@ -367,7 +375,9 @@ textarea.ci::placeholder{color:var(--muted);}
           <textarea class="ci" id="ci" placeholder="Describe a mood, ask for a section, request a riff or lyrics..." onkeydown="hk(event)" oninput="ar(this)"></textarea>
           <button class="sbtn" id="sbtn" onclick="send()">➤</button>
         </div>
-      </div>
+      </div><!-- end chatPane -->
+
+      <div class="divider" id="paneDivider"></div>
 
       <div class="spane" id="sheetPane">
         <div class="shead">
@@ -575,6 +585,29 @@ function initLayout(){
   }
 }
 initLayout();window.addEventListener('resize',initLayout);
+
+// ── Divider drag to resize panes ──────────────────────────────────
+(function(){
+  const divider=document.getElementById('paneDivider');
+  const spane=document.getElementById('sheetPane');
+  let dragging=false,startX=0,startW=0;
+  divider.addEventListener('mousedown',e=>{
+    if(window.innerWidth<700)return;
+    dragging=true;startX=e.clientX;startW=spane.offsetWidth;
+    divider.classList.add('dragging');
+    document.body.style.cssText+='cursor:col-resize;user-select:none;';
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    const newW=Math.min(Math.max(startW+(startX-e.clientX),180),window.innerWidth-300);
+    spane.style.width=newW+'px';
+  });
+  document.addEventListener('mouseup',()=>{
+    if(!dragging)return;
+    dragging=false;divider.classList.remove('dragging');
+    document.body.style.cursor='';document.body.style.userSelect='';
+  });
+})();
 
 // ── Migrate old keys ──────────────────────────────────────────────
 (function(){const map={'fretboard_api_key':'fa_ak','fretboard_jsonbin_key':'fa_jk','fretboard_jsonbin_bin':'fa_jb','fretboard_songs':'fa_songs','fretboard_covers':'fa_covers','fretboard_session':'fa_sess'};Object.entries(map).forEach(([o,n])=>{const v=localStorage.getItem(o);if(v&&!localStorage.getItem(n))localStorage.setItem(n,v);});})();
