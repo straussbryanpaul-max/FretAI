@@ -184,12 +184,26 @@ textarea.ci::placeholder{color:var(--muted);}
 .covsec h4{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--rust);margin-bottom:5px;}
 .covchords{font-family:var(--fm);font-size:13px;color:var(--gold);font-weight:700;line-height:2;}
 .covnotes{font-size:13px;color:var(--text);line-height:1.7;margin-top:8px;}
+.cl-lyrics{margin-top:10px;font-size:13px;line-height:1;}
+.cl-line{display:flex;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;min-height:32px;}
+.cl-seg{display:inline-flex;flex-direction:column;margin-right:2px;}
+.cl-chord{color:var(--gold);font-family:var(--fm);font-size:11px;font-weight:700;line-height:1.3;white-space:nowrap;}
+.cl-word{color:var(--text);line-height:1.6;white-space:pre;}
+.cl-noseg{color:var(--text);line-height:1.6;align-self:flex-end;}
 .tab-block{margin-top:12px;border-top:1px solid var(--border);padding-top:10px;}
 .tab-block-title{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--rust);margin-bottom:8px;}
 .tab-lbl{font-family:var(--fm);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
 .tab-pre{font-family:var(--fm);font-size:11px;color:#a8c4a8;line-height:1.6;background:#0d1a0d;border:1px solid #1e3a1e;border-radius:2px;padding:10px 12px;overflow-x:auto;white-space:pre;margin-bottom:10px;-webkit-overflow-scrolling:touch;}
 .savecov{margin-top:12px;background:transparent;border:1px solid var(--green);color:var(--green);font-family:var(--fm);font-size:10px;letter-spacing:1px;padding:10px 16px;border-radius:2px;cursor:pointer;width:100%;}
 .savecov:active,.savecov:hover{background:var(--green);color:#fff;}
+.sug-grid{display:flex;flex-direction:column;gap:10px;padding:14px;}
+.sug-card{background:var(--s2);border:1px solid var(--border);border-radius:3px;padding:14px;animation:fu .25s ease;}
+.sug-title{font-family:var(--fd);font-size:18px;color:var(--gold);letter-spacing:1px;margin-bottom:2px;}
+.sug-artist{font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;}
+.sug-reason{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:8px;}
+.sug-meta{font-family:var(--fm);font-size:9px;color:var(--rust);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.sug-btn{background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:var(--fm);font-size:9px;letter-spacing:1px;padding:6px 14px;border-radius:2px;cursor:pointer;transition:all .12s;}
+.sug-btn:hover,.sug-btn:active{background:var(--gold);color:var(--bg);}
 .citem{padding:12px;border:1px solid var(--border);border-radius:3px;margin-bottom:8px;cursor:pointer;background:var(--s2);}
 .citem:active,.citem:hover{border-color:var(--gold);}
 .citem-title{font-family:var(--fm);font-size:12px;font-weight:700;color:var(--text);}
@@ -302,6 +316,20 @@ textarea.ci::placeholder{color:var(--muted);}
 @keyframes blink{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
 
 
+/* RECORDING BAR */
+.recbar{padding:6px 14px;border-bottom:1px solid var(--border);background:var(--s2);display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:34px;}
+.rec-idle-btn{font-family:var(--fm);font-size:9px;letter-spacing:1px;padding:4px 10px;border-radius:2px;cursor:pointer;border:1px solid var(--border2);color:var(--muted);background:transparent;transition:all .12s;}
+.rec-idle-btn:hover{border-color:var(--rust);color:var(--rust);}
+.rec-dot{color:var(--rust);font-size:10px;animation:recpulse 1s infinite;}
+@keyframes recpulse{0%,100%{opacity:1}50%{opacity:.3}}
+.rec-timer{font-family:var(--fm);font-size:10px;color:var(--rust);letter-spacing:2px;min-width:32px;}
+.rec-stop-btn{font-family:var(--fm);font-size:9px;letter-spacing:1px;padding:4px 10px;border-radius:2px;cursor:pointer;border:1px solid var(--rust);color:var(--rust);background:transparent;}
+.rec-play-btn{font-family:var(--fm);font-size:9px;letter-spacing:1px;padding:4px 10px;border-radius:2px;cursor:pointer;border:1px solid var(--green);color:var(--green);background:transparent;transition:all .12s;}
+.rec-play-btn:hover{background:var(--green);color:#fff;}
+.rec-dur{font-family:var(--fm);font-size:9px;color:var(--muted);letter-spacing:1px;}
+.rec-del-btn{font-family:var(--fm);font-size:9px;letter-spacing:1px;padding:4px 8px;border-radius:2px;cursor:pointer;border:1px solid var(--border2);color:var(--muted);background:transparent;margin-left:auto;transition:all .12s;}
+.rec-del-btn:hover{border-color:var(--rust);color:var(--rust);}
+
 /* RESIZABLE DIVIDER */
 .divider{display:none;width:5px;flex-shrink:0;background:var(--border);cursor:col-resize;transition:background .15s;position:relative;z-index:10;}
 .divider:hover,.divider.dragging{background:var(--gold);}
@@ -358,6 +386,9 @@ textarea.ci::placeholder{color:var(--muted);}
     <button class="tbtn" onclick="sv('practice')">🎸 Practice</button>
   </div>
   <div class="hactions">
+    <button class="hbtn" id="recBtn" onclick="handleRecBtn()">🎙 Rec</button>
+    <span id="recTimer" style="display:none;font-family:var(--fm);font-size:9px;color:var(--rust);letter-spacing:1px"></span>
+    <button class="hbtn" id="recDelBtn" onclick="deleteRecording()" style="display:none">✕ Rec</button>
     <button class="hbtn" onclick="manualSync()"><span class="dot" id="syncDot"></span><span id="syncLbl">☁ Sync</span></button>
     <button class="hbtn" onclick="openSettings()"><span class="dot" id="apiDot"></span><span>Settings</span></button>
   </div>
@@ -425,8 +456,9 @@ textarea.ci::placeholder{color:var(--muted);}
   <div class="view" id="coverView">
     <div class="csbar">
       <div class="csrow">
-        <input class="cinput" id="cinput" placeholder="Song + artist (e.g. Blackbird Beatles)..." onkeydown="if(event.key==='Enter')lookupCover()">
+        <input class="cinput" id="cinput" placeholder="Song + artist — or describe what you want..." onkeydown="if(event.key==='Enter')lookupCover()">
         <button class="lbtn" id="lbtn" onclick="lookupCover()">Look Up</button>
+        <button class="lbtn" id="sugbtn" onclick="suggestCovers()" style="background:transparent;border:1px solid var(--gold);color:var(--gold)">Suggest</button>
       </div>
     </div>
     <div class="stabs" id="coverTabs">
@@ -590,6 +622,7 @@ textarea.ci::placeholder{color:var(--muted);}
         <button class="xbtn" onclick="closeSV()">✕ Close</button>
       </div>
     </div>
+    <div class="recbar" id="svRecBar"></div>
     <div class="svbody" id="svbody"></div>
   </div>
 </div>
@@ -649,16 +682,49 @@ let chatHist=_s.chatHist||[];
 let sections=_s.sections||[];
 let songTitle=_s.songTitle||'Untitled Song';
 let currentSongId=_s.currentSongId||null;
+let currentRecordingId=_s.recordingId||null;
 let isLoading=false,coverData=null,viewingSong=null;
 const pendingSections={},retryRequests={};
 
-function persist(){localStorage.setItem('fa_sess',JSON.stringify({chatHist,sections,songTitle,currentSongId}));}
+function persist(){localStorage.setItem('fa_sess',JSON.stringify({chatHist,sections,songTitle,currentSongId,recordingId:currentRecordingId}));}
+
+// ── Chord voicing calculator (fallback for chords not in SHP) ─────
+function getVoicing(name, apiVoicings){
+  if(apiVoicings&&apiVoicings[name])return apiVoicings[name];
+  if(SHP[name])return SHP[name];
+  const noteMap={'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'F':5,'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11};
+  let root='',qual='';
+  for(const n of['C#','Db','D#','Eb','F#','Gb','G#','Ab','A#','Bb']){if(name.startsWith(n)){root=n;qual=name.slice(n.length);break;}}
+  if(!root){root=name[0]||'';qual=name.slice(1);}
+  const semi=noteMap[root];if(semi===undefined)return null;
+  const ql=qual.toLowerCase();
+  const minor=(ql==='m'||(/^m/.test(ql)&&!/^maj/.test(ql)));
+  const maj7=ql.includes('maj7');
+  const dom7=!maj7&&ql.includes('7');
+  const eFret=(semi-4+12)%12; // root on low E string
+  const aFret=(semi-9+12)%12; // root on A string
+  if(aFret<eFret){
+    const r=aFret;
+    if(minor&&dom7)return[-1,r,r+2,r,r+1,r];   // Am7 shape
+    if(minor)      return[-1,r,r+2,r+2,r+1,r]; // Am shape
+    if(dom7)       return[-1,r,r+2,r+2,r+2,r+2]; // A7 shape
+    if(maj7)       return[-1,r,r+2,r+1,r+2,r]; // Amaj7 shape
+                   return[-1,r,r+2,r+2,r+2,r]; // A shape
+  }else{
+    const r=eFret;
+    if(minor&&dom7)return[r,r+2,r+2,r,r,r];   // Em7 shape
+    if(minor)      return[r,r+2,r+2,r,r,r];   // Em shape
+    if(dom7)       return[r,r+2,r,r+1,r,r];   // E7 shape
+    if(maj7)       return[r,r+2,r+1,r+1,r,r]; // Emaj7 shape
+                   return[r,r+2,r+2,r+1,r,r]; // E shape
+  }
+}
 
 // ── Chord shapes ──────────────────────────────────────────────────
 const SHP={'Am':[0,0,2,2,1,0],'A':[0,0,2,2,2,0],'A7':[0,0,2,0,2,0],'Asus2':[0,0,2,2,0,0],'Asus4':[0,0,2,2,3,0],'C':[0,3,2,0,1,0],'Cadd9':[0,3,2,0,3,3],'Cmaj7':[0,3,2,0,0,0],'D':[0,0,0,2,3,2],'Dm':[0,0,0,2,3,1],'D7':[0,0,0,2,1,2],'Dsus2':[0,0,0,2,3,0],'Dsus4':[0,0,0,2,3,3],'E':[0,2,2,1,0,0],'Em':[0,2,2,0,0,0],'E7':[0,2,0,1,0,0],'Esus4':[0,2,2,2,0,0],'F':[1,3,3,2,1,1],'Fmaj7':[0,0,3,2,1,0],'G':[3,2,0,0,0,3],'G7':[3,2,0,0,0,1],'Gsus2':[3,0,0,0,0,3],'Gsus4':[3,3,0,0,1,3],'Bm':[0,2,4,4,3,2],'B7':[0,2,1,2,0,2],'Gmaj7':[3,2,0,0,0,2],'Am7':[0,0,2,0,1,0],'Em7':[0,2,2,0,3,0],'Dm7':[0,0,0,2,1,1]};
 
-function drawDiag(name){
-  const shape=SHP[name];if(!shape)return'';
+function drawDiag(name,shapeOverride){
+  const shape=shapeOverride||SHP[name];if(!shape)return'';
   const strings=6,frets=4,sw=9,sh=11,px=16,py=18;
   const w=sw*(strings-1)+px*2,h=sh*frets+py+16;
   const fr=shape.filter(f=>f>0),mn=fr.length?Math.min(...fr):0,off=mn>2?mn-1:0;
@@ -723,6 +789,180 @@ function saveSettings(){
   jbBin=document.getElementById('jbInput').value.trim();
   localStorage.setItem('fa_ak',apiKey);localStorage.setItem('fa_jk',jbKey);localStorage.setItem('fa_jb',jbBin);
   updateDots();closeSettings();if(jbKey&&jbBin)pullCloud();
+}
+
+// ── Recording ────────────────────────────────────────────────────
+let recDB=null,mediaRecorder=null,recChunks=[],recTimerInterval=null,recSeconds=0,recAudio=null,isRecording=false,isPlaying=false;
+
+function openRecDB(){
+  if(recDB)return Promise.resolve(recDB);
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open('fretai_rec',1);
+    req.onupgradeneeded=e=>e.target.result.createObjectStore('recs');
+    req.onsuccess=e=>{recDB=e.target.result;res(recDB);};
+    req.onerror=rej;
+  });
+}
+async function saveRec(id,blob){await openRecDB();return new Promise((res,rej)=>{const tx=recDB.transaction('recs','readwrite');tx.objectStore('recs').put(blob,id);tx.oncomplete=res;tx.onerror=rej;});}
+async function getRec(id){await openRecDB();return new Promise((res,rej)=>{const tx=recDB.transaction('recs','readonly');const req=tx.objectStore('recs').get(id);req.onsuccess=()=>res(req.result);req.onerror=rej;});}
+async function deleteRecFromDB(id){if(!id)return;await openRecDB();return new Promise((res,rej)=>{const tx=recDB.transaction('recs','readwrite');tx.objectStore('recs').delete(id);tx.oncomplete=res;tx.onerror=rej;});}
+
+function formatRecTime(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
+
+function renderRecBar(){
+  const btn=document.getElementById('recBtn');
+  const timer=document.getElementById('recTimer');
+  const delBtn=document.getElementById('recDelBtn');
+  if(!btn)return;
+  if(isRecording){
+    btn.textContent='■ Stop';btn.style.borderColor='var(--rust)';btn.style.color='var(--rust)';
+    timer.style.display='';timer.textContent=formatRecTime(recSeconds);
+    delBtn.style.display='none';
+  } else if(currentRecordingId){
+    btn.textContent='▶ Rec';btn.style.borderColor='var(--green)';btn.style.color='var(--green)';
+    timer.style.display='none';
+    delBtn.style.display='';
+  } else {
+    btn.textContent='🎙 Rec';btn.style.borderColor='';btn.style.color='';
+    timer.style.display='none';delBtn.style.display='none';
+  }
+}
+
+function handleRecBtn(){
+  if(isRecording)stopRec();
+  else if(currentRecordingId)toggleRecPlay();
+  else startRec();
+}
+
+async function startRec(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    recChunks=[];recSeconds=0;isRecording=true;
+    const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
+    mediaRecorder=new MediaRecorder(stream,{mimeType:mime});
+    mediaRecorder.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};
+    mediaRecorder.onstop=async()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      const blob=new Blob(recChunks,{type:mime});
+      const id='rec_'+Date.now();
+      if(currentRecordingId)await deleteRecFromDB(currentRecordingId);
+      await saveRec(id,blob);
+      currentRecordingId=id;isRecording=false;
+      clearInterval(recTimerInterval);persist();renderRecBar();
+    };
+    mediaRecorder.start(500);
+    renderRecBar();
+    recTimerInterval=setInterval(()=>{recSeconds++;const el=document.getElementById('recTimer');if(el){el.style.display='';el.textContent=formatRecTime(recSeconds);}},1000);
+  }catch(e){isRecording=false;alert('Microphone access denied.');}
+}
+
+function stopRec(){if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();}
+
+async function toggleRecPlay(){
+  if(isPlaying){
+    if(recAudio){recAudio.pause();}
+    isPlaying=false;
+    const btn=document.getElementById('recPlayBtn');if(btn)btn.textContent='▶ Play';
+    return;
+  }
+  const blob=await getRec(currentRecordingId).catch(()=>null);
+  if(!blob)return;
+  if(recAudio){recAudio.pause();URL.revokeObjectURL(recAudio.src);}
+  recAudio=new Audio(URL.createObjectURL(blob));
+  recAudio.onended=()=>{isPlaying=false;const btn=document.getElementById('recPlayBtn');if(btn)btn.textContent='▶ Play';};
+  recAudio.play();isPlaying=true;
+  const btn=document.getElementById('recPlayBtn');if(btn)btn.textContent='⏸ Pause';
+}
+
+async function deleteRecording(){
+  if(!confirm('Delete this recording?'))return;
+  if(isPlaying){recAudio?.pause();isPlaying=false;}
+  await deleteRecFromDB(currentRecordingId);
+  currentRecordingId=null;persist();renderRecBar();
+}
+
+// ── Library-modal recording (separate context from write view) ─────
+let svRecId=null,isSvRecording=false,isSvPlaying=false,svRecAudio=null,svRecSeconds=0,svRecTimerInterval=null;
+
+function renderSvRecBar(){
+  const bar=document.getElementById('svRecBar');if(!bar)return;
+  if(isSvRecording){
+    bar.innerHTML=`<span class="rec-dot">●</span><span class="rec-timer" id="svRecTimer">${formatRecTime(svRecSeconds)}</span><button class="rec-stop-btn" onclick="stopSvRec()">■ Stop</button>`;
+  } else if(svRecId){
+    bar.innerHTML=`<button class="rec-play-btn" id="svRecPlayBtn" onclick="toggleSvRecPlay()">▶ Play</button><span class="rec-dur" id="svRecDur"></span><button class="rec-del-btn" onclick="deleteSvRecording()">✕ Delete</button>`;
+    getRec(svRecId).then(blob=>{
+      if(!blob)return;
+      const url=URL.createObjectURL(blob);
+      const a=new Audio(url);
+      a.onloadedmetadata=()=>{const el=document.getElementById('svRecDur');if(el)el.textContent=formatRecTime(Math.round(a.duration));URL.revokeObjectURL(url);};
+    }).catch(()=>{});
+  } else {
+    bar.innerHTML=`<button class="rec-idle-btn" onclick="startSvRec()">🎙 Record</button>`;
+  }
+}
+
+async function startSvRec(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    recChunks=[];svRecSeconds=0;isSvRecording=true;
+    const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
+    mediaRecorder=new MediaRecorder(stream,{mimeType:mime});
+    mediaRecorder.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};
+    mediaRecorder.onstop=async()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      const blob=new Blob(recChunks,{type:mime});
+      const id='rec_'+Date.now();
+      if(svRecId)await deleteRecFromDB(svRecId);
+      await saveRec(id,blob);
+      svRecId=id;isSvRecording=false;
+      clearInterval(svRecTimerInterval);
+      // Persist back to the song in library
+      if(viewingSong){
+        let songs=JSON.parse(localStorage.getItem('fa_songs')||'[]');
+        const idx=songs.findIndex(s=>s.id===viewingSong.id);
+        if(idx>=0){songs[idx].recordingId=svRecId;localStorage.setItem('fa_songs',JSON.stringify(songs));pushCloud();}
+        viewingSong.recordingId=svRecId;
+        // Also update current session if this is the loaded song
+        if(currentSongId===viewingSong.id){currentRecordingId=svRecId;persist();renderRecBar();}
+      }
+      renderSvRecBar();
+    };
+    mediaRecorder.start(500);
+    renderSvRecBar();
+    svRecTimerInterval=setInterval(()=>{svRecSeconds++;const el=document.getElementById('svRecTimer');if(el)el.textContent=formatRecTime(svRecSeconds);},1000);
+  }catch(e){isSvRecording=false;alert('Microphone access denied.');}
+}
+
+function stopSvRec(){if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();}
+
+async function toggleSvRecPlay(){
+  if(isSvPlaying){
+    if(svRecAudio)svRecAudio.pause();
+    isSvPlaying=false;
+    const btn=document.getElementById('svRecPlayBtn');if(btn)btn.textContent='▶ Play';
+    return;
+  }
+  const blob=await getRec(svRecId).catch(()=>null);if(!blob)return;
+  if(svRecAudio){svRecAudio.pause();URL.revokeObjectURL(svRecAudio.src);}
+  svRecAudio=new Audio(URL.createObjectURL(blob));
+  svRecAudio.onended=()=>{isSvPlaying=false;const btn=document.getElementById('svRecPlayBtn');if(btn)btn.textContent='▶ Play';};
+  svRecAudio.play();isSvPlaying=true;
+  const btn=document.getElementById('svRecPlayBtn');if(btn)btn.textContent='⏸ Pause';
+}
+
+async function deleteSvRecording(){
+  if(!confirm('Delete this recording?'))return;
+  if(isSvPlaying){svRecAudio?.pause();isSvPlaying=false;}
+  await deleteRecFromDB(svRecId);
+  svRecId=null;
+  if(viewingSong){
+    let songs=JSON.parse(localStorage.getItem('fa_songs')||'[]');
+    const idx=songs.findIndex(s=>s.id===viewingSong.id);
+    if(idx>=0){songs[idx].recordingId=null;localStorage.setItem('fa_songs',JSON.stringify(songs));pushCloud();}
+    viewingSong.recordingId=null;
+    if(currentSongId===viewingSong.id){currentRecordingId=null;persist();renderRecBar();}
+  }
+  renderSvRecBar();
 }
 
 // ── JSONBin ───────────────────────────────────────────────────────
@@ -1122,7 +1362,9 @@ function editTitle(){
 
 function newSong(){
   if(sections.length&&!confirm('Start a new song? Unsaved work will be lost.'))return;
-  songTitle='Untitled Song';sections=[];chatHist=[];currentSongId=null;persist();
+  if(isPlaying){recAudio?.pause();isPlaying=false;}
+  if(currentRecordingId)deleteRecFromDB(currentRecordingId);
+  songTitle='Untitled Song';sections=[];chatHist=[];currentSongId=null;currentRecordingId=null;persist();renderRecBar();
   document.getElementById('stitle').textContent=songTitle;renderSheet();
   document.getElementById('msgs').innerHTML=`<div class="msg ai"><div class="av">🎸</div><div class="bub">Fresh start! What mood or style are we going for?</div></div>`;
   document.getElementById('qarea').style.display='flex';
@@ -1134,9 +1376,9 @@ function saveSong(){
   let songs=JSON.parse(localStorage.getItem('fa_songs')||'[]');
   if(currentSongId){
     const idx=songs.findIndex(s=>s.id===currentSongId);
-    if(idx>=0){songs[idx]={...songs[idx],title:songTitle,sections,date:new Date().toLocaleDateString()};localStorage.setItem('fa_songs',JSON.stringify(songs));pushCloud();alert(`"${songTitle}" updated!`);return;}
+    if(idx>=0){songs[idx]={...songs[idx],title:songTitle,sections,date:new Date().toLocaleDateString(),recordingId:currentRecordingId};localStorage.setItem('fa_songs',JSON.stringify(songs));pushCloud();alert(`"${songTitle}" updated!`);return;}
   }
-  const song={id:Date.now(),title:songTitle,sections,date:new Date().toLocaleDateString()};
+  const song={id:Date.now(),title:songTitle,sections,date:new Date().toLocaleDateString(),recordingId:currentRecordingId};
   currentSongId=song.id;songs.unshift(song);
   localStorage.setItem('fa_songs',JSON.stringify(songs));pushCloud();alert(`"${songTitle}" saved!`);
 }
@@ -1178,21 +1420,28 @@ function renderLib(){
 }
 function getSong(id){return JSON.parse(localStorage.getItem('fa_songs')||'[]').find(s=>s.id===id);}
 function viewSong(id){
-  const song=getSong(id);if(!song)return;viewingSong=song;
+  const song=getSong(id);if(!song)return;
+  if(isSvPlaying){svRecAudio?.pause();isSvPlaying=false;}
+  viewingSong=song;svRecId=song.recordingId||null;
   document.getElementById('svtitle').textContent=song.title;
   document.getElementById('svbody').innerHTML=song.sections.map(s=>{
     if(s.stype==='tab')return`<div class="sblock" style="margin-bottom:10px"><div class="sblock-head" style="cursor:default"><div style="display:flex;align-items:center;gap:4px"><span class="sblock-label">${s.label}</span></div><span class="sblock-type">Tab</span></div><div class="sblock-tab">${s.tab}</div>${s.notes?`<div class="sblock-notes">📝 ${s.notes}</div>`:''}${s.lyrics?`<div class="sblock-lyrics">${s.lyrics}</div>`:''}</div>`;
     return`<div class="sblock" style="margin-bottom:10px"><div class="sblock-head" style="cursor:default"><div style="display:flex;align-items:center;gap:4px"><span class="sblock-label">${s.label}</span></div><span class="sblock-type">Chords</span></div><div class="sblock-chords">${s.chords}</div>${s.pattern?`<div class="sblock-pattern">${s.pattern}</div>`:''}${s.notes?`<div class="sblock-notes">📝 ${s.notes}</div>`:''}${s.lyrics?`<div class="sblock-lyrics">${s.lyrics}</div>`:`<div class="sblock-lyrics"><span class="nolyr">No lyrics</span></div>`}</div>`;
   }).join('');
   document.getElementById('svmodal').classList.add('open');
+  renderSvRecBar();
 }
-function closeSV(){document.getElementById('svmodal').classList.remove('open');viewingSong=null;}
+function closeSV(){
+  if(isSvPlaying){svRecAudio?.pause();isSvPlaying=false;}
+  document.getElementById('svmodal').classList.remove('open');viewingSong=null;
+}
 function exportSavedSong(){if(viewingSong)doExport(viewingSong.title,viewingSong.sections);}
 function expSong(id){const s=getSong(id);if(s)doExport(s.title,s.sections);}
 function loadSong(id){
   const song=getSong(id);if(!song)return;
-  songTitle=song.title;sections=[...song.sections];chatHist=[];currentSongId=song.id;persist();
-  document.getElementById('stitle').textContent=songTitle;renderSheet();sv('write');
+  if(isPlaying){recAudio?.pause();isPlaying=false;}
+  songTitle=song.title;sections=[...song.sections];chatHist=[];currentSongId=song.id;currentRecordingId=song.recordingId||null;persist();
+  document.getElementById('stitle').textContent=songTitle;renderSheet();renderRecBar();sv('write');
   addMsg('ai',`Loaded <strong>${songTitle}</strong>. Let's keep working on it!`);
 }
 function delSong(id){
@@ -1202,9 +1451,23 @@ function delSong(id){
 }
 
 // ── Cover Lookup ──────────────────────────────────────────────────
+function renderChordLyrics(lyrics){
+  if(!lyrics)return'';
+  return'<div class="cl-lyrics">'+lyrics.split('\n').map(line=>{
+    if(!line.trim())return'<div class="cl-line" style="height:6px"></div>';
+    if(!line.includes('['))return`<div class="cl-line"><span class="cl-noseg">${line}</span></div>`;
+    const segs=[];
+    const fb=line.indexOf('[');
+    if(fb>0)segs.push({chord:null,text:line.slice(0,fb)});
+    const re=/\[([^\]]+)\]([^\[]*)/g;let m;
+    while((m=re.exec(line))!==null)segs.push({chord:m[1],text:m[2]});
+    return`<div class="cl-line">${segs.map(seg=>seg.chord?`<span class="cl-seg"><span class="cl-chord">${seg.chord}</span><span class="cl-word">${seg.text}</span></span>`:`<span class="cl-noseg">${seg.text}</span>`).join('')}</div>`;
+  }).join('')+'</div>';
+}
+
 function covCardHTML(c){
-  return `<div class="covcard"><div class="covcard-title">${c.title}</div><div class="covcard-artist">${c.artist||''} · ${c.key||''} · ${c.capo||'No capo'} · ${c.tuning||'Standard'} · ${c.difficulty||''}</div>${(c.sections||[]).map(s=>`<div class="covsec"><h4>${s.label}</h4><div class="covchords">${s.chords}</div></div>`).join('')}${c.notes?`<div class="covnotes">${c.notes}</div>`:''}${(c.tabs&&c.tabs.length)?`<div class="tab-block"><div class="tab-block-title">Tablature</div>${c.tabs.map(t=>`<div class="tab-lbl">${t.label}</div><pre class="tab-pre">${t.tab}</pre>`).join('')}</div>`:''}
-  <div class="diagbar" style="padding:10px 0;background:transparent;border-top:1px solid var(--border);margin-top:12px"><div class="diagbar-title">Chord Diagrams</div><div class="diagrow" style="margin-top:8px">${(c.chords||[]).filter(ch=>SHP[ch]).map(ch=>`<div class="ditem"><div class="dname">${ch}</div>${drawDiag(ch)}</div>`).join('')}</div></div>
+  return `<div class="covcard"><div class="covcard-title">${c.title}</div><div class="covcard-artist">${c.artist||''} · ${c.key||''} · ${c.capo||'No capo'} · ${c.tuning||'Standard'} · ${c.difficulty||''}</div>${(c.sections||[]).map(s=>`<div class="covsec"><h4>${s.label}</h4><div class="covchords">${s.chords}</div>${renderChordLyrics(s.lyrics)}</div>`).join('')}${c.notes?`<div class="covnotes">${c.notes}</div>`:''}${(c.tabs&&c.tabs.length)?`<div class="tab-block"><div class="tab-block-title">Tablature</div>${c.tabs.map(t=>`<div class="tab-lbl">${t.label}</div><pre class="tab-pre">${t.tab}</pre>`).join('')}</div>`:''}
+  <div class="diagbar" style="padding:10px 0;background:transparent;border-top:1px solid var(--border);margin-top:12px"><div class="diagbar-title">Chord Diagrams</div><div class="diagrow" style="margin-top:8px">${(c.chords||[]).map(ch=>{const shape=getVoicing(ch,c.voicings);return shape?`<div class="ditem"><div class="dname">${ch}</div>${drawDiag(ch,shape)}</div>`:''}).join('')}</div></div>
   <button class="savecov" onclick="saveCover()">💾 Save to My Covers</button></div>`;
 }
 async function lookupCover(){
@@ -1214,15 +1477,67 @@ async function lookupCover(){
   const res=document.getElementById('cresult');
   res.innerHTML=`<div class="sempty" style="padding:40px"><div class="typing" style="justify-content:center"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
   if(window.innerWidth<700)showCPane('result');
-  const sys=`Guitar chord and tab expert. Return ONLY JSON:\n\`\`\`json\n{"title":"","artist":"","key":"","capo":"No capo","tuning":"Standard (EADGBe)","sections":[{"label":"Verse","chords":"G Am C D"}],"chords":["G","Am","C","D"],"tabs":[{"label":"Intro","tab":"e|------|\\nB|------|\\nG|------|\\nD|------|\\nA|------|\\nE|------|"}],"notes":"","difficulty":""}\n\`\`\``;
+  const sys=`You are a guitar chord expert. Return ONLY a JSON code block with this exact structure:
+\`\`\`json
+{"title":"","artist":"","key":"","capo":"No capo","tuning":"Standard (EADGBe)","difficulty":"","sections":[{"label":"Verse 1","chords":"G Em C D","lyrics":"[G]First line of the [Em]verse\\n[C]Second line [D]here"}],"chords":["G","Em","C","D"],"voicings":{"G":[3,2,0,0,0,3],"Em":[0,2,2,0,0,0],"C":[0,3,2,0,1,0],"D":[0,0,0,2,3,2]},"tabs":[{"label":"Intro","tab":"e|------|\\nB|------|\\nG|------|\\nD|------|\\nA|------|\\nE|------|"}],"notes":""}
+\`\`\`
+Rules:
+- voicings: every chord in the chords array MUST have an entry — 6 integers [lowE,A,D,G,B,highE], 0=open -1=mute N=fret
+- lyrics: include chord-annotated lyrics for every section using [Chord] inline markers. For copyrighted songs provide at least the first 2 lines of each section showing the chord placements.
+- sections: cover Intro/Verse/Chorus/Bridge/Outro as appropriate`;
   try{
-    const full=await callClaude(sys,[{role:'user',content:`Guitar chords for: ${q}`}],900);
+    const full=await callClaude(sys,[{role:'user',content:`Guitar chords and lyrics for: ${q}`}],3000);
     const parsed=parseJSON(full);
     if(!parsed)res.innerHTML=`<div style="padding:20px;color:var(--muted)">Couldn't parse. Try again.</div>`;
     else{coverData=parsed;res.innerHTML=covCardHTML(parsed);}
   }catch(err){if(err.message==='NO_KEY'){res.innerHTML=`<div style="padding:20px;color:var(--muted)">Set your API key first.</div>`;openSettings();}else res.innerHTML=`<div style="padding:20px;color:var(--muted)">Error: ${err.message}</div>`;}
   btn.disabled=false;btn.textContent='Look Up';
 }
+async function suggestCovers(){
+  const q=document.getElementById('cinput').value.trim();
+  if(!q)return;
+  if(!apiKey){openSettings();return;}
+  const btn=document.getElementById('sugbtn');btn.disabled=true;btn.textContent='Finding...';
+  const res=document.getElementById('cresult');
+  res.innerHTML=`<div class="sempty" style="padding:40px"><div class="typing" style="justify-content:center"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+  if(window.innerWidth<700)showCPane('result');
+  const sys=`You are a guitar teacher. Suggest exactly 5 real songs matching the description. Return ONLY a JSON array with exactly 5 objects:
+\`\`\`json
+[
+{"title":"Song One","artist":"Artist","key":"E","difficulty":"Beginner","reason":"Why it fits and what makes it playable"},
+{"title":"Song Two","artist":"Artist","key":"A","difficulty":"Intermediate","reason":"Why it fits"},
+{"title":"Song Three","artist":"Artist","key":"G","difficulty":"Beginner","reason":"Why it fits"},
+{"title":"Song Four","artist":"Artist","key":"D","difficulty":"Beginner","reason":"Why it fits"},
+{"title":"Song Five","artist":"Artist","key":"Em","difficulty":"Intermediate","reason":"Why it fits"}
+]
+\`\`\`
+Be specific in the reason — mention actual chords, techniques, or song feel.`;
+  try{
+    const full=await callClaude(sys,[{role:'user',content:q}],1400);
+    const parsed=parseJSON(full);
+    if(!Array.isArray(parsed)||!parsed.length){res.innerHTML=`<div style="padding:20px;color:var(--muted)">Couldn't get suggestions. Try again.</div>`;}
+    else{
+      res.innerHTML=`<div class="sug-grid">${parsed.map(s=>`
+        <div class="sug-card">
+          <div class="sug-title">${s.title}</div>
+          <div class="sug-artist">${s.artist||''}</div>
+          <div class="sug-reason">${s.reason||''}</div>
+          <div class="sug-meta">${[s.key?'Key: '+s.key:'',s.difficulty].filter(Boolean).join(' · ')}</div>
+          <button class="sug-btn" onclick="lookupSuggested('${(s.title+' '+s.artist).replace(/'/g,"\\'")}')">Look Up Chords →</button>
+        </div>`).join('')}</div>`;
+    }
+  }catch(err){
+    if(err.message==='NO_KEY'){openSettings();}
+    else res.innerHTML=`<div style="padding:20px;color:var(--muted)">Error: ${err.message}</div>`;
+  }
+  btn.disabled=false;btn.textContent='Suggest';
+}
+
+function lookupSuggested(query){
+  document.getElementById('cinput').value=query;
+  lookupCover();
+}
+
 function saveCover(){
   if(!coverData)return;
   const covers=JSON.parse(localStorage.getItem('fa_covers')||'[]');
@@ -1504,7 +1819,7 @@ function delLink(i){const l=getLinks();l.splice(i,1);saveLinks(l);renderLinks();
     });
     for(let i=chatHist.length-1;i>=0;i--){if(chatHist[i].role==='assistant'){const p=parseJSON(chatHist[i].content);if(p?.chords?.length)showDiags(p.chords);break;}}
   }
-  renderScale();
+  renderScale();renderRecBar();
   if(jbKey&&jbBin)pullCloud();
 })();
 </script>
