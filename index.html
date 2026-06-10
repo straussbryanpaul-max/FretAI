@@ -867,7 +867,7 @@ async function toggleRecPlay(){
     return;
   }
   const blob=await getRec(currentRecordingId).catch(()=>null);
-  if(!blob)return;
+  if(!blob){currentRecordingId=null;persist();renderRecBar();return;}
   if(recAudio){recAudio.pause();URL.revokeObjectURL(recAudio.src);}
   recAudio=new Audio(URL.createObjectURL(blob));
   recAudio.onended=()=>{isPlaying=false;const btn=document.getElementById('recPlayBtn');if(btn)btn.textContent='▶ Play';};
