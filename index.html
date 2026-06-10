@@ -848,6 +848,7 @@ async function startRec(){
       if(currentRecordingId)await deleteRecFromDB(currentRecordingId);
       await saveRec(id,blob);
       currentRecordingId=id;isRecording=false;
+      if(currentSongId){const idx=songs.findIndex(s=>s.id===currentSongId);if(idx>=0){songs[idx].recordingId=id;localStorage.setItem('fa_songs',JSON.stringify(songs));pushCloud();}}
       clearInterval(recTimerInterval);persist();renderRecBar();
     };
     mediaRecorder.start(500);
